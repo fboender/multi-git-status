@@ -22,11 +22,14 @@ else
     DEPTH=$2
 fi
 
+# Find all .git dirs, up to DEPTH levels deep
 for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     PROJ_DIR=$(dirname $GIT_DIR)
 
     printf "${PROJ_DIR}: "
 
+    # Find all remote branches that have been checked out and figure out if
+    # they need a push.
     NEEDS_PUSH_BRANCHES=""
     for REF_HEAD in $(ls $GIT_DIR/refs/heads); do
         REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
@@ -40,9 +43,13 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
         NEEDS_PUSH_BRANCHES=$(echo "$NEEDS_PUSH_BRANCHES" | awk '{print substr($0, 2, length($0) - 1)}')
     fi
 
+    # Find out if there are uncomitted changes
     UNCOMMITTED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
+
+    # Find out if there are untracked changes
     UNTRACKED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR ls-files --exclude-standard --others)
 
+    # Build up the status string
     STATUS_NEEDS=""
     if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_YELLOW}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
@@ -56,5 +63,7 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     if [ "$STATUS_NEEDS" = "" ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_GREEN}ok${C_RESET} "
     fi
+
+    # Print the output
     printf "$STATUS_NEEDS\n"
 done
