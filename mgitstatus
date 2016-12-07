@@ -44,7 +44,8 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     fi
 
     # Find out if there are uncomitted changes
-    UNCOMMITTED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
+    UNSTAGED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
+    UNCOMMITTED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-files --quiet --ignore-submodules --; echo $?)
 
     # Find out if there are untracked changes
     UNTRACKED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR ls-files --exclude-standard --others)
@@ -54,7 +55,7 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_YELLOW}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
     fi
-    if [ "$UNCOMMITTED" -ne 0 ]; then
+    if [ "$UNSTAGED" -ne 0 -o "$UNCOMMITTED" -ne 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_RED}Uncommitted changes${C_RESET} "
     fi
     if [ "$UNTRACKED" != "" ]; then
