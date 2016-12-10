@@ -10,6 +10,13 @@ C_WHITE="\033[1;37m"
 C_GREEN="\033[1;32m"
 C_RESET="$(tput sgr0)"
 
+C_OK="$C_GREEN"
+C_NEEDS_PUSH="$C_YELLOW"
+C_NEEDS_PULL="$C_BLUE"
+C_NEEDS_COMMIT="$C_RED"
+C_UNTRACKED="$C_CYAN"
+
+
 if [ "$1" = "--help" -o -z "$1" ]; then
     echo "Usage: $0 <DIR> [DEPTH=2]" >&2
     echo
@@ -63,19 +70,19 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     # Build up the status string
     STATUS_NEEDS=""
     if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
-        STATUS_NEEDS="${STATUS_NEEDS}${C_YELLOW}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
+        STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
     fi
     if [ \! -z "$NEEDS_PULL_BRANCHES" ]; then
-        STATUS_NEEDS="${STATUS_NEEDS}${C_BLUE}Needs pull ($NEEDS_PULL_BRANCHES)${C_RESET} "
+        STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PULL}Needs pull ($NEEDS_PULL_BRANCHES)${C_RESET} "
     fi
     if [ "$UNSTAGED" -ne 0 -o "$UNCOMMITTED" -ne 0 ]; then
-        STATUS_NEEDS="${STATUS_NEEDS}${C_RED}Uncommitted changes${C_RESET} "
+        STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_COMMIT}Uncommitted changes${C_RESET} "
     fi
     if [ "$UNTRACKED" != "" ]; then
-        STATUS_NEEDS="${STATUS_NEEDS}${C_CYAN}Untracked files${C_RESET} "
+        STATUS_NEEDS="${STATUS_NEEDS}${C_UNTRACKED}Untracked files${C_RESET} "
     fi
     if [ "$STATUS_NEEDS" = "" ]; then
-        STATUS_NEEDS="${STATUS_NEEDS}${C_GREEN}ok${C_RESET} "
+        STATUS_NEEDS="${STATUS_NEEDS}${C_OK}ok${C_RESET} "
     fi
 
     # Print the output
