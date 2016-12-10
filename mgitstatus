@@ -30,7 +30,7 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     printf "${PROJ_DIR}: "
 
     # Find all remote branches that have been checked out and figure out if
-    # they need a push.
+    # they need a push or pull.
     NEEDS_PUSH_BRANCHES=""
     NEEDS_PULL_BRANCHES=""
     for REF_HEAD in $(ls $GIT_DIR/refs/heads); do
