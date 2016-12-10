@@ -4,6 +4,7 @@
 
 C_RED="\033[1;31m"
 C_YELLOW="\033[1;33m"
+C_BLUE="\033[1;34m"
 C_CYAN="\033[1;36m"
 C_WHITE="\033[1;37m"
 C_GREEN="\033[1;32m"
@@ -31,16 +32,25 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     # Find all remote branches that have been checked out and figure out if
     # they need a push.
     NEEDS_PUSH_BRANCHES=""
+    NEEDS_PULL_BRANCHES=""
     for REF_HEAD in $(ls $GIT_DIR/refs/heads); do
         REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
         REV_REMOTE=$(git --git-dir $GIT_DIR rev-parse --verify origin/$REF_HEAD 2>/dev/null)
+        REV_BASE=$(git --git-dir $GIT_DIR merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
 
-        if [ "$REV_LOCAL" != "$REV_REMOTE" ]; then
+        if [ "$REV_LOCAL" = "$REV_REMOTE" ]; then
+            : # NOOP
+        elif [ "$REV_LOCAL" = "$REV_BASE" ]; then
+            NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES},$REF_HEAD"
+        elif [ "$REV_REMOTE" = "$REV_BASE" ]; then
             NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES},$REF_HEAD"
         fi
     done
     if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
         NEEDS_PUSH_BRANCHES=$(echo "$NEEDS_PUSH_BRANCHES" | awk '{print substr($0, 2, length($0) - 1)}')
+    fi
+    if [ \! -z "$NEEDS_PULL_BRANCHES" ]; then
+        NEEDS_PULL_BRANCHES=$(echo "$NEEDS_PULL_BRANCHES" | awk '{print substr($0, 2, length($0) - 1)}')
     fi
 
     # Find out if there are uncomitted changes
@@ -54,6 +64,9 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     STATUS_NEEDS=""
     if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_YELLOW}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
+    fi
+    if [ \! -z "$NEEDS_PULL_BRANCHES" ]; then
+        STATUS_NEEDS="${STATUS_NEEDS}${C_BLUE}Needs pull ($NEEDS_PULL_BRANCHES)${C_RESET} "
     fi
     if [ "$UNSTAGED" -ne 0 -o "$UNCOMMITTED" -ne 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_RED}Uncommitted changes${C_RESET} "
