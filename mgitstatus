@@ -37,28 +37,52 @@ for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
     printf "${PROJ_DIR}: "
 
     # Find all remote branches that have been checked out and figure out if
-    # they need a push or pull.
-    NEEDS_PUSH_BRANCHES=""
+    # they need a push or pull. We do this with various tests and put the name
+    # of the branches in NEEDS_XXXX, seperated by newlines. After we're done,
+    # we remove duplicates from NEEDS_XXX.
+    NEEDS_PUSH_BRANCHES="" 
     NEEDS_PULL_BRANCHES=""
+
     for REF_HEAD in $(ls $GIT_DIR/refs/heads); do
+        # Check if this branch is tracking a remote branch
+        TRACKING_REMOTE=$(git --git-dir $GIT_DIR rev-parse --abbrev-ref --symbolic-full-name $REF_HEAD@{u} 2>/dev/null)
+        if [ $? -eq 0 ]; then
+            # Branch is tracking a remote branch. Find out how much behind /
+            # ahead it is of that remote branch.
+            CNT_AHEAD_BEHIND=$(git --git-dir $GIT_DIR rev-list --left-right --count $REF_HEAD...$TRACKING_REMOTE)
+            CNT_AHEAD=$(echo $CNT_AHEAD_BEHIND | awk '{ print $1 }')
+            CNT_BEHIND=$(echo $CNT_AHEAD_BEHIND | awk '{ print $2 }')
+
+            if [ $CNT_AHEAD -gt 0 ]; then
+                NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES}\n$REF_HEAD"
+            fi
+            if [ $CNT_BEHIND -gt 0 ]; then
+                NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES}\n$REF_HEAD"
+            fi
+        else
+            # FIXME: Non-tracking branches might need a remote for pushing?
+            :
+        fi
+
         REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
         REV_REMOTE=$(git --git-dir $GIT_DIR rev-parse --verify origin/$REF_HEAD 2>/dev/null)
         REV_BASE=$(git --git-dir $GIT_DIR merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
 
         if [ "$REV_LOCAL" = "$REV_REMOTE" ]; then
             : # NOOP
-        elif [ "$REV_LOCAL" = "$REV_BASE" ]; then
-            NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES},$REF_HEAD"
-        elif [ "$REV_REMOTE" = "$REV_BASE" ]; then
-            NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES},$REF_HEAD"
+        else
+            if [ "$REV_LOCAL" = "$REV_BASE" ]; then
+                NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES}\n$REF_HEAD"
+            fi
+            if [ "$REV_REMOTE" = "$REV_BASE" ]; then
+                NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES}\n$REF_HEAD"
+            fi
         fi
     done
-    if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
-        NEEDS_PUSH_BRANCHES=$(echo "$NEEDS_PUSH_BRANCHES" | awk '{print substr($0, 2, length($0) - 1)}')
-    fi
-    if [ \! -z "$NEEDS_PULL_BRANCHES" ]; then
-        NEEDS_PULL_BRANCHES=$(echo "$NEEDS_PULL_BRANCHES" | awk '{print substr($0, 2, length($0) - 1)}')
-    fi
+
+    # Remove duplicates from NEEDS_XXXX and make comma-seperated
+    NEEDS_PUSH_BRANCHES=$(printf "$NEEDS_PUSH_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
+    NEEDS_PULL_BRANCHES=$(printf "$NEEDS_PULL_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
     # Find out if there are uncomitted changes
     UNSTAGED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
