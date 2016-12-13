@@ -17,11 +17,17 @@ C_NEEDS_COMMIT="$C_RED"
 C_UNTRACKED="$C_CYAN"
 
 
-if [ "$1" = "--help" -o -z "$1" ]; then
-    echo "Usage: $0 <DIR> [DEPTH=2]" >&2
+if [ "$1" = "--help" ]; then
+    echo "Usage: $0 [DIR] [DEPTH=2]" >&2
     echo
     echo "Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status"
     exit 1
+fi
+
+if [ -z "$1" ]; then
+    ROOT_DIR="."
+else
+    ROOT_DIR=$1
 fi
 
 if [ -z "$2" ]; then
@@ -31,7 +37,7 @@ else
 fi
 
 # Find all .git dirs, up to DEPTH levels deep
-for GIT_DIR in $(find $1 -maxdepth $DEPTH -name ".git" -type d); do
+for GIT_DIR in $(find $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
     PROJ_DIR=$(dirname $GIT_DIR)
 
     printf "${PROJ_DIR}: "
