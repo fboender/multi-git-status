@@ -5,6 +5,23 @@ Show uncommited, untracked and unpushed changes in mulitple Git repositories.
 
 ![](https://raw.githubusercontent.com/fboender/multi-git-status/master/screenshot.png)
 
+multi-git-status shows:
+
+* **Needs push(BRANCH)** if the branch is tracking a remote branch which is
+  behind. If there are branches with no remote, this status is also shown
+  since the branch might be new and unpushed. This is even true for branches
+  with no new commits.
+* **Needs pull(BRANCH)** if the branch is tracking a remote branch which is
+  ahead. This requires that the local git repo already knows about the remote
+  changes (i.e. you've done a `fetch`). It does NOT contact the remote.
+* **Uncomitted changes** if there are unstaged or uncommitted changes on the
+  checked out branch.
+* **Untracked files** if there are untracked files which are not ignored.
+
+Since there are a lot of different states a git repository can be in,
+multi-git-status makes no guarantees that *all* states are taken into account.
+For example, multi-git-status does not look at stashes.
+
 # Usage
 
     Usage: mgitstatus <DIR> [DEPTH=2]
