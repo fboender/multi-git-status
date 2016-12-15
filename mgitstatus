@@ -16,6 +16,7 @@ C_NEEDS_PULL="$C_BLUE"
 C_NEEDS_COMMIT="$C_RED"
 C_UNTRACKED="$C_CYAN"
 
+DEBUG=0
 
 if [ "$1" = "--help" ]; then
     echo "Usage: $0 [DIR] [DEPTH=2]" >&2
@@ -42,6 +43,8 @@ for GIT_DIR in $(find $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
 
     printf "${PROJ_DIR}: "
 
+    [ $DEBUG -eq 1 ] && echo
+
     # Find all remote branches that have been checked out and figure out if
     # they need a push or pull. We do this with various tests and put the name
     # of the branches in NEEDS_XXXX, seperated by newlines. After we're done,
@@ -59,6 +62,10 @@ for GIT_DIR in $(find $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
             CNT_AHEAD=$(echo $CNT_AHEAD_BEHIND | awk '{ print $1 }')
             CNT_BEHIND=$(echo $CNT_AHEAD_BEHIND | awk '{ print $2 }')
 
+            [ $DEBUG -eq 1 ] && echo CNT_AHEAD_BEHIND: $CNT_AHEAD_BEHIND
+            [ $DEBUG -eq 1 ] && echo CNT_AHEAD: $CNT_AHEAD
+            [ $DEBUG -eq 1 ] && echo CNT_BEHIND: $CNT_BEHIND
+
             if [ $CNT_AHEAD -gt 0 ]; then
                 NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES}\n$REF_HEAD"
             fi
@@ -73,6 +80,10 @@ for GIT_DIR in $(find $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
         REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
         REV_REMOTE=$(git --git-dir $GIT_DIR rev-parse --verify origin/$REF_HEAD 2>/dev/null)
         REV_BASE=$(git --git-dir $GIT_DIR merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
+
+        [ $DEBUG -eq 1 ] && echo REV_LOCAL: $REV_LOCAL
+        [ $DEBUG -eq 1 ] && echo REV_REMOTE: $REV_REMOTE
+        [ $DEBUG -eq 1 ] && echo REV_BASE: $REV_BASE
 
         if [ "$REV_LOCAL" = "$REV_REMOTE" ]; then
             : # NOOP
