@@ -1,7 +1,7 @@
 Multi-git-status
 ================
 
-Show uncommited, untracked and unpushed changes in mulitple Git repositories.
+Show uncommited, untracked and unpushed changes in multiple Git repositories.
 
 ![](https://raw.githubusercontent.com/fboender/multi-git-status/master/screenshot.png)
 
