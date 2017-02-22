@@ -38,7 +38,7 @@ else
 fi
 
 # Find all .git dirs, up to DEPTH levels deep
-for GIT_DIR in $(find -H $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
+for GIT_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
     PROJ_DIR=$(dirname $GIT_DIR)
 
     printf "${PROJ_DIR}: "
