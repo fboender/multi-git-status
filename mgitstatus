@@ -45,6 +45,9 @@ for GIT_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
 
     [ $DEBUG -eq 1 ] && echo
 
+    # Refresh the index, or we might get wrong results.
+    git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR update-index -q --refresh >/dev/null 2>&1
+
     # Find all remote branches that have been checked out and figure out if
     # they need a push or pull. We do this with various tests and put the name
     # of the branches in NEEDS_XXXX, seperated by newlines. After we're done,
