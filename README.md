@@ -28,6 +28,30 @@ For example, multi-git-status does not look at stashes.
     
     Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
+The following example scans all directories under the current dir, with a
+depth of 2. That means the current dir and all directories directly under it.
+
+    ~/Projects/fboender $ mgitstatus 
+    ./multi-git-status: ok 
+    ./mdpreview: ok 
+    ./snippets: ok 
+    ./boxes: ok 
+    ./ansible-cmdb: Uncommitted changes Untracked files 
+    ./scriptform: Uncommitted changes 
+
+To scan deeper:
+
+    ~/Projects $ mgitstatus . 3
+    ./megacorp/ansible: ok 
+    ./megacorp/monitoring: ok 
+    ./fboender/multi-git-status: ok 
+    ./fboender/mdpreview: ok 
+    ./fboender/snippets: ok 
+    ./fboender/boxes: ok 
+    ./fboender/ansible-cmdb: Uncommitted changes Untracked files 
+    ./fboender/scriptform: Uncommitted changes 
+    ./fboender/startpage: ok 
+
 # Installation
 
 1. Clone this git repo
