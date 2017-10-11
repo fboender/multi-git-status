@@ -19,10 +19,18 @@ C_UNTRACKED="$C_CYAN"
 DEBUG=0
 
 if [ "$1" = "--help" ]; then
-    echo "Usage: $0 [DIR] [DEPTH=2]" >&2
+    echo "Usage: $0 [-w] [DIR] [DEPTH=2]" >&2
     echo
     echo "Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status"
+    echo
+    echo "  -w   Warn about dirs that are not Git repositories"
     exit 1
+fi
+
+WARN_NOT_REPO=0
+if [ "$1" = "-w" ]; then
+    WARN_NOT_REPO=1
+    shift
 fi
 
 if [ -z "$1" ]; then
@@ -38,8 +46,19 @@ else
 fi
 
 # Find all .git dirs, up to DEPTH levels deep
-for GIT_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -name ".git" -type d); do
-    PROJ_DIR=$(dirname $GIT_DIR)
+for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
+    GIT_DIR="$PROJ_DIR/.git"
+
+    # Skip '.' and '..'
+    [ "$PROJ_DIR" = "." -o "$GIT_DIR" = ".." ] && continue
+
+    # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
+    if [ \! -d "$GIT_DIR" ]; then
+        if [ "$WARN_NOT_REPO" -eq 1 ]; then
+            printf "${PROJ_DIR}: not a git repo\n"
+        fi
+        continue
+    fi
 
     printf "${PROJ_DIR}: "
 

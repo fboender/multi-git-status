@@ -22,11 +22,18 @@ Since there are a lot of different states a git repository can be in,
 multi-git-status makes no guarantees that *all* states are taken into account.
 For example, multi-git-status does not look at stashes.
 
+multi-git-status can also list dirs that are not a repo, if given the `-w`
+switch.
+
+
 # Usage
 
-    Usage: mgitstatus <DIR> [DEPTH=2]
+    Usage: mgitstatus [-w] <DIR> [DEPTH=2]
     
     Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
+
+      -w   Warn about dirs that are not Git repositories
+
 
 The following example scans all directories under the current dir, with a
 depth of 2. That means the current dir and all directories directly under it.
