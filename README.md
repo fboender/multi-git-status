@@ -7,11 +7,11 @@ Show uncommited, untracked and unpushed changes in multiple Git repositories.
 
 multi-git-status shows:
 
-* **Needs push(BRANCH)** if the branch is tracking a remote branch which is
+* **Needs push(BRANCH)** if the branch is tracking a (remote) branch which is
   behind. If there are branches with no remote, this status is also shown
   since the branch might be new and unpushed. This is even true for branches
   with no new commits.
-* **Needs pull(BRANCH)** if the branch is tracking a remote branch which is
+* **Needs pull(BRANCH)** if the branch is tracking a (remote) branch which is
   ahead. This requires that the local git repo already knows about the remote
   changes (i.e. you've done a `fetch`). It does NOT contact the remote.
 * **Uncomitted changes** if there are unstaged or uncommitted changes on the
