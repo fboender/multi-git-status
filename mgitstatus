@@ -18,6 +18,7 @@ C_UNTRACKED="$C_CYAN"
 
 DEBUG=0
 
+# Handle commandline options
 if [ "$1" = "--help" ]; then
     echo "Usage: $0 [-w] [DIR] [DEPTH=2]" >&2
     echo
@@ -99,6 +100,8 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
             :
         fi
 
+        # Check if this branch is a branch off another branch. and if it needs
+        # to be updated.
         REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
         REV_REMOTE=$(git --git-dir $GIT_DIR rev-parse --verify origin/$REF_HEAD 2>/dev/null)
         REV_BASE=$(git --git-dir $GIT_DIR merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
@@ -123,11 +126,9 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     NEEDS_PUSH_BRANCHES=$(printf "$NEEDS_PUSH_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
     NEEDS_PULL_BRANCHES=$(printf "$NEEDS_PULL_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
-    # Find out if there are uncomitted changes
+    # Find out if there are unstaed, uncomitted or untracked
     UNSTAGED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
     UNCOMMITTED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-files --quiet --ignore-submodules --; echo $?)
-
-    # Find out if there are untracked changes
     UNTRACKED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR ls-files --exclude-standard --others)
 
     # Build up the status string
