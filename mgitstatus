@@ -20,7 +20,7 @@ DEBUG=0
 
 # Handle commandline options
 if [ "$1" = "--help" ]; then
-    echo "Usage: $0 [-w] [DIR] [DEPTH=2]" >&2
+    echo "Usage: $0 [-w] [-e] [DIR] [DEPTH=2]" >&2
     echo
     echo "Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status"
     echo

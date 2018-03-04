@@ -28,7 +28,7 @@ switch.
 
 # Usage
 
-    Usage: mgitstatus [-w] <DIR> [DEPTH=2]
+    Usage: mgitstatus [-w] [-e] <DIR> [DEPTH=2]
     
     Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
