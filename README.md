@@ -33,6 +33,7 @@ switch.
     Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
       -w   Warn about dirs that are not Git repositories
+      -e   Exclude repos that are 'ok'
 
 
 The following example scans all directories under the current dir, with a
