@@ -25,14 +25,26 @@ if [ "$1" = "--help" ]; then
     echo "Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status"
     echo
     echo "  -w   Warn about dirs that are not Git repositories"
+    echo "  -e   Exclude repos that are 'ok'"
     exit 1
 fi
 
 WARN_NOT_REPO=0
-if [ "$1" = "-w" ]; then
-    WARN_NOT_REPO=1
+EXCLUDE_OK=0
+
+while [ \! -z "$1" ]; do
+    # Stop reading when we don't recognise the arguments anymore
+    [ "$1" != "-w" -a "$1" != "-e" ] && break
+
+    if [ "$1" = "-w" ]; then
+        WARN_NOT_REPO=1
+    fi
+    if [ "$1" = "-e" ]; then
+        EXCLUDE_OK=1
+    fi
+
     shift
-fi
+done
 
 if [ -z "$1" ]; then
     ROOT_DIR="."
@@ -61,9 +73,7 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
         continue
     fi
 
-    printf "${PROJ_DIR}: "
-
-    [ $DEBUG -eq 1 ] && echo
+    [ $DEBUG -eq 1 ] && echo "${PROJ_DIR}"
 
     # Refresh the index, or we might get wrong results.
     git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR update-index -q --refresh >/dev/null 2>&1
@@ -132,6 +142,7 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     UNTRACKED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR ls-files --exclude-standard --others)
 
     # Build up the status string
+    IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
     STATUS_NEEDS=""
     if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
@@ -146,9 +157,12 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
         STATUS_NEEDS="${STATUS_NEEDS}${C_UNTRACKED}Untracked files${C_RESET} "
     fi
     if [ "$STATUS_NEEDS" = "" ]; then
+        IS_OK=1
         STATUS_NEEDS="${STATUS_NEEDS}${C_OK}ok${C_RESET} "
     fi
 
-    # Print the output
-    printf "$STATUS_NEEDS\n"
+    # Print the output, unless repo is 'ok' and -e was specified
+    if [ "$IS_OK" -ne 1 -o "$EXCLUDE_OK" -ne 1 ]; then
+        printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+    fi
 done
