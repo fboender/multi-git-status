@@ -5,6 +5,7 @@
 C_RED="\033[1;31m"
 C_YELLOW="\033[1;33m"
 C_BLUE="\033[1;34m"
+C_PURPLE="\033[1;35m"
 C_CYAN="\033[1;36m"
 C_WHITE="\033[1;37m"
 C_GREEN="\033[1;32m"
@@ -14,6 +15,7 @@ C_OK="$C_GREEN"
 C_NEEDS_PUSH="$C_YELLOW"
 C_NEEDS_PULL="$C_BLUE"
 C_NEEDS_COMMIT="$C_RED"
+C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 
 DEBUG=0
@@ -84,14 +86,15 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     # we remove duplicates from NEEDS_XXX.
     NEEDS_PUSH_BRANCHES="" 
     NEEDS_PULL_BRANCHES=""
+    NEEDS_UPSTREAM_BRANCHES=""
 
-    for REF_HEAD in $(ls $GIT_DIR/refs/heads); do
-        # Check if this branch is tracking a remote branch
-        TRACKING_REMOTE=$(git --git-dir $GIT_DIR rev-parse --abbrev-ref --symbolic-full-name $REF_HEAD@{u} 2>/dev/null)
+    for REF_HEAD in $(cd $GIT_DIR/refs/heads && find -type 'f' | sed "s/^\.\///"); do
+        # Check if this branch is tracking an upstream (local/remote branch)
+        UPSTREAM=$(git --git-dir $GIT_DIR rev-parse --abbrev-ref --symbolic-full-name $REF_HEAD@{u} 2>/dev/null)
         if [ $? -eq 0 ]; then
             # Branch is tracking a remote branch. Find out how much behind /
             # ahead it is of that remote branch.
-            CNT_AHEAD_BEHIND=$(git --git-dir $GIT_DIR rev-list --left-right --count $REF_HEAD...$TRACKING_REMOTE)
+            CNT_AHEAD_BEHIND=$(git --git-dir $GIT_DIR rev-list --left-right --count $REF_HEAD...$UPSTREAM)
             CNT_AHEAD=$(echo $CNT_AHEAD_BEHIND | awk '{ print $1 }')
             CNT_BEHIND=$(echo $CNT_AHEAD_BEHIND | awk '{ print $2 }')
 
@@ -105,38 +108,40 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
             if [ $CNT_BEHIND -gt 0 ]; then
                 NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES}\n$REF_HEAD"
             fi
-        else
-            # FIXME: Non-tracking branches might need a remote for pushing?
-            :
-        fi
 
-        # Check if this branch is a branch off another branch. and if it needs
-        # to be updated.
-        REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
-        REV_REMOTE=$(git --git-dir $GIT_DIR rev-parse --verify origin/$REF_HEAD 2>/dev/null)
-        REV_BASE=$(git --git-dir $GIT_DIR merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
+            # Check if this branch is a branch off another branch. and if it needs
+            # to be updated.
+            REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
+            REV_REMOTE=$(git --git-dir $GIT_DIR rev-parse --verify origin/$REF_HEAD 2>/dev/null)
+            REV_BASE=$(git --git-dir $GIT_DIR merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
 
-        [ $DEBUG -eq 1 ] && echo REV_LOCAL: $REV_LOCAL
-        [ $DEBUG -eq 1 ] && echo REV_REMOTE: $REV_REMOTE
-        [ $DEBUG -eq 1 ] && echo REV_BASE: $REV_BASE
+            [ $DEBUG -eq 1 ] && echo REV_LOCAL: $REV_LOCAL
+            [ $DEBUG -eq 1 ] && echo REV_REMOTE: $REV_REMOTE
+            [ $DEBUG -eq 1 ] && echo REV_BASE: $REV_BASE
 
-        if [ "$REV_LOCAL" = "$REV_REMOTE" ]; then
-            : # NOOP
-        else
-            if [ "$REV_LOCAL" = "$REV_BASE" ]; then
-                NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES}\n$REF_HEAD"
+            if [ "$REV_LOCAL" = "$REV_REMOTE" ]; then
+                : # NOOP
+            else
+                if [ "$REV_LOCAL" = "$REV_BASE" ]; then
+                    NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES}\n$REF_HEAD"
+                fi
+                if [ "$REV_REMOTE" = "$REV_BASE" ]; then
+                    NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES}\n$REF_HEAD"
+                fi
             fi
-            if [ "$REV_REMOTE" = "$REV_BASE" ]; then
-                NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES}\n$REF_HEAD"
+            else
+                # Branch does not have an upstream (local/remote branch).
+                NEEDS_UPSTREAM_BRANCHES="${NEEDS_UPSTREAM_BRANCHES}\n$REF_HEAD"
             fi
-        fi
+
     done
 
     # Remove duplicates from NEEDS_XXXX and make comma-seperated
     NEEDS_PUSH_BRANCHES=$(printf "$NEEDS_PUSH_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
     NEEDS_PULL_BRANCHES=$(printf "$NEEDS_PULL_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
+    NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
-    # Find out if there are unstaed, uncomitted or untracked
+    # Find out if there are unstaged, uncomitted or untracked changes
     UNSTAGED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
     UNCOMMITTED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-files --quiet --ignore-submodules --; echo $?)
     UNTRACKED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR ls-files --exclude-standard --others)
@@ -149,6 +154,9 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     fi
     if [ \! -z "$NEEDS_PULL_BRANCHES" ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PULL}Needs pull ($NEEDS_PULL_BRANCHES)${C_RESET} "
+    fi
+    if [ \! -z "$NEEDS_UPSTREAM_BRANCHES" ]; then
+        STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_UPSTREAM}Needs upstream ($NEEDS_UPSTREAM_BRANCHES)${C_RESET} "
     fi
     if [ "$UNSTAGED" -ne 0 -o "$UNCOMMITTED" -ne 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_COMMIT}Uncommitted changes${C_RESET} "
