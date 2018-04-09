@@ -88,7 +88,7 @@ for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     NEEDS_PULL_BRANCHES=""
     NEEDS_UPSTREAM_BRANCHES=""
 
-    for REF_HEAD in $(cd $GIT_DIR/refs/heads && find -type 'f' | sed "s/^\.\///"); do
+    for REF_HEAD in $(cd $GIT_DIR/refs/heads && find . -type 'f' | sed "s/^\.\///"); do
         # Check if this branch is tracking an upstream (local/remote branch)
         UPSTREAM=$(git --git-dir $GIT_DIR rev-parse --abbrev-ref --symbolic-full-name $REF_HEAD@{u} 2>/dev/null)
         if [ $? -eq 0 ]; then
