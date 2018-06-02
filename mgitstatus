@@ -60,8 +60,11 @@ else
     DEPTH=$2
 fi
 
+# See if we're currently in a git repo, and include it
+CUR_REPO_GITDIR="$(git rev-parse --git-dir 2>/dev/null)" && CUR_REPO="$(dirname $CUR_REPO_GITDIR)"
+
 # Find all .git dirs, up to DEPTH levels deep
-for PROJ_DIR in $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
+for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     GIT_DIR="$PROJ_DIR/.git"
 
     # Skip '.' and '..'
