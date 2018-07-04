@@ -19,10 +19,10 @@ multi-git-status shows:
   ahead. This requires that the local git repo already knows about the remote
   changes (i.e. you've done a `fetch`). Multi-git-status does NOT contact the
   remote.
+* **X stashes** if there are stashes.
 
 Since there are a lot of different states a git repository can be in,
 multi-git-status makes no guarantees that *all* states are taken into account.
-For example, multi-git-status does not look at stashes.
 
 multi-git-status can also list dirs that are not a repo, if given the `-w`
 switch.
@@ -63,6 +63,8 @@ To scan deeper:
     ./fboender/startpage: ok 
 
 # Installation
+
+Multi-git-status requires a POSIX compliant shell. Bash will do fine.
 
 1. Clone this git repo
 2. Copy `mgitstatus` somewhere in your PATH
