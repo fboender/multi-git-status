@@ -17,6 +17,7 @@ C_NEEDS_PULL="$C_BLUE"
 C_NEEDS_COMMIT="$C_RED"
 C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
+C_STASHES="$C_YELLOW"
 
 DEBUG=0
 
@@ -148,6 +149,9 @@ for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     UNSTAGED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
     UNCOMMITTED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-files --quiet --ignore-submodules --; echo $?)
     UNTRACKED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR ls-files --exclude-standard --others)
+    cd $(dirname $GIT_DIR)
+    STASHES=$(git stash list | wc -l)
+    cd $OLDPWD
 
     # Build up the status string
     IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
@@ -166,6 +170,9 @@ for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     fi
     if [ "$UNTRACKED" != "" ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_UNTRACKED}Untracked files${C_RESET} "
+    fi
+    if [ "$STASHES" -ne 0 ]; then
+        STATUS_NEEDS="${STATUS_NEEDS}${C_STASHES}$STASHES stashes${C_RESET} "
     fi
     if [ "$STATUS_NEEDS" = "" ]; then
         IS_OK=1
