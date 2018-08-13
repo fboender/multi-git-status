@@ -61,19 +61,14 @@ else
     DEPTH=$2
 fi
 
-# See if we're currently in a git repo, and include it
-CUR_REPO_GITDIR="$(git rev-parse --git-dir 2>/dev/null)" && CUR_REPO="$(dirname $CUR_REPO_GITDIR)"
-
 # Find all .git dirs, up to DEPTH levels deep
-for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
+find -L $ROOT_DIR -maxdepth $DEPTH -type d | while read PROJ_DIR
+do
     GIT_DIR="$PROJ_DIR/.git"
-
-    # Skip '.' and '..'
-    [ "$PROJ_DIR" = "." -o "$GIT_DIR" = ".." ] && continue
 
     # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
     if [ \! -d "$GIT_DIR" ]; then
-        if [ "$WARN_NOT_REPO" -eq 1 ]; then
+        if [ "$WARN_NOT_REPO" -eq 1 -a "$PROJ_DIR" != "." ]; then
             printf "${PROJ_DIR}: not a git repo\n"
         fi
         continue
@@ -82,7 +77,7 @@ for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     [ $DEBUG -eq 1 ] && echo "${PROJ_DIR}"
 
     # Refresh the index, or we might get wrong results.
-    git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR update-index -q --refresh >/dev/null 2>&1
+    git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
 
     # Find all remote branches that have been checked out and figure out if
     # they need a push or pull. We do this with various tests and put the name
@@ -92,13 +87,13 @@ for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     NEEDS_PULL_BRANCHES=""
     NEEDS_UPSTREAM_BRANCHES=""
 
-    for REF_HEAD in $(cd $GIT_DIR/refs/heads && find . -type 'f' | sed "s/^\.\///"); do
+    for REF_HEAD in $(cd "$GIT_DIR/refs/heads" && find . -type 'f' | sed "s/^\.\///"); do
         # Check if this branch is tracking an upstream (local/remote branch)
-        UPSTREAM=$(git --git-dir $GIT_DIR rev-parse --abbrev-ref --symbolic-full-name $REF_HEAD@{u} 2>/dev/null)
+        UPSTREAM=$(git --git-dir "$GIT_DIR" rev-parse --abbrev-ref --symbolic-full-name $REF_HEAD@{u} 2>/dev/null)
         if [ $? -eq 0 ]; then
             # Branch is tracking a remote branch. Find out how much behind /
             # ahead it is of that remote branch.
-            CNT_AHEAD_BEHIND=$(git --git-dir $GIT_DIR rev-list --left-right --count $REF_HEAD...$UPSTREAM)
+            CNT_AHEAD_BEHIND=$(git --git-dir "$GIT_DIR" rev-list --left-right --count $REF_HEAD...$UPSTREAM)
             CNT_AHEAD=$(echo $CNT_AHEAD_BEHIND | awk '{ print $1 }')
             CNT_BEHIND=$(echo $CNT_AHEAD_BEHIND | awk '{ print $2 }')
 
@@ -115,9 +110,9 @@ for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
 
             # Check if this branch is a branch off another branch. and if it needs
             # to be updated.
-            REV_LOCAL=$(git --git-dir $GIT_DIR rev-parse --verify $REF_HEAD 2>/dev/null)
-            REV_REMOTE=$(git --git-dir $GIT_DIR rev-parse --verify origin/$REF_HEAD 2>/dev/null)
-            REV_BASE=$(git --git-dir $GIT_DIR merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
+            REV_LOCAL=$(git --git-dir "$GIT_DIR" rev-parse --verify $REF_HEAD 2>/dev/null)
+            REV_REMOTE=$(git --git-dir "$GIT_DIR" rev-parse --verify origin/$REF_HEAD 2>/dev/null)
+            REV_BASE=$(git --git-dir "$GIT_DIR" merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
 
             [ $DEBUG -eq 1 ] && echo REV_LOCAL: $REV_LOCAL
             [ $DEBUG -eq 1 ] && echo REV_REMOTE: $REV_REMOTE
@@ -146,10 +141,10 @@ for PROJ_DIR in $CUR_REPO $(find -L $ROOT_DIR -maxdepth $DEPTH -type d); do
     NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
     # Find out if there are unstaged, uncomitted or untracked changes
-    UNSTAGED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-index --quiet HEAD --; echo $?)
-    UNCOMMITTED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR diff-files --quiet --ignore-submodules --; echo $?)
-    UNTRACKED=$(git --work-tree $(dirname $GIT_DIR) --git-dir $GIT_DIR ls-files --exclude-standard --others)
-    cd $(dirname $GIT_DIR)
+    UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD --; echo $?)
+    UNCOMMITTED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
+    UNTRACKED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
+    cd "$(dirname "$GIT_DIR")"
     STASHES=$(git stash list | wc -l)
     cd $OLDPWD
 
