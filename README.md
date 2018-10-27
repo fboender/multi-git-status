@@ -17,8 +17,8 @@ multi-git-status shows:
   pushed or merged.
 * **Needs pull (BRANCH)** if the branch is tracking a (remote) branch which is
   ahead. This requires that the local git repo already knows about the remote
-  changes (i.e. you've done a `fetch`). Multi-git-status does NOT contact the
-  remote.
+  changes (i.e. you've done a `fetch`), or that you specify the `-f` option.
+  Multi-git-status does NOT contact the remote by default.
 * **X stashes** if there are stashes.
 
 Since there are a lot of different states a git repository can be in,
@@ -30,12 +30,13 @@ switch.
 
 # Usage
 
-    Usage: mgitstatus [-w] [-e] <DIR> [DEPTH=2]
+    Usage: mgitstatus [-w] [-e] [-f] <DIR> [DEPTH=2]
     
     Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
       -w   Warn about dirs that are not Git repositories
       -e   Exclude repos that are 'ok'
+      -f   Do a 'git fetch' on each repo (slow for many repos)
 
 
 The following example scans all directories under the current dir, with a

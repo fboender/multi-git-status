@@ -32,21 +32,26 @@ if [ "$1" = "--help" ]; then
     echo
     echo "  -w   Warn about dirs that are not Git repositories"
     echo "  -e   Exclude repos that are 'ok'"
+    echo "  -f   Do a 'git fetch' on each repo (slow for many repos)"
     exit 1
 fi
 
 WARN_NOT_REPO=0
 EXCLUDE_OK=0
+DO_FETCH=0
 
 while [ \! -z "$1" ]; do
     # Stop reading when we don't recognise the arguments anymore
-    [ "$1" != "-w" -a "$1" != "-e" ] && break
+    [ "$1" != "-w" -a "$1" != "-e" -a "$1" != "-f" ] && break
 
     if [ "$1" = "-w" ]; then
         WARN_NOT_REPO=1
     fi
     if [ "$1" = "-e" ]; then
         EXCLUDE_OK=1
+    fi
+    if [ "$1" = "-f" ]; then
+        DO_FETCH=1
     fi
 
     shift
@@ -78,6 +83,11 @@ do
     fi
 
     [ $DEBUG -eq 1 ] && echo "${PROJ_DIR}"
+
+    # Do a 'git fetch' if requested
+    if [ "$DO_FETCH" -eq 1 ]; then
+        git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" fetch -q >/dev/null
+    fi
 
     # Refresh the index, or we might get wrong results.
     git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
