@@ -38,7 +38,6 @@ switch.
       -e   Exclude repos that are 'ok'
       -f   Do a 'git fetch' on each repo (slow for many repos)
 
-
 The following example scans all directories under the current dir, with a
 depth of 2. That means the current dir and all directories directly under it.
 
@@ -63,12 +62,19 @@ To scan deeper:
     ./fboender/scriptform: Uncommitted changes 
     ./fboender/startpage: ok 
 
+
 # Installation
 
 Multi-git-status requires a POSIX compliant shell. Bash will do fine.
 
 1. Clone this git repo
 2. Copy `mgitstatus` somewhere in your PATH
+
+Or follow these instructions:
+
+    $ curl -s -o mgitstatus https://raw.githubusercontent.com/fboender/multi-git-status/master/mgitstatus
+    $ chmod 755 mgitstatus
+    $ sudo mv mgitstatus /usr/local/bin/
 
 # License
 
