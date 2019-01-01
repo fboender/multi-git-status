@@ -15,6 +15,7 @@ if [ -t 1 ]; then
 fi
 
 C_OK="$C_GREEN"
+C_LOCKED="$C_RED"
 C_NEEDS_PUSH="$C_YELLOW"
 C_NEEDS_PULL="$C_BLUE"
 C_NEEDS_COMMIT="$C_RED"
@@ -83,6 +84,12 @@ do
     fi
 
     [ $DEBUG -eq 1 ] && echo "${PROJ_DIR}"
+
+    # Check if repo is locked
+    if [ -f "$GIT_DIR/index.lock" ]; then
+        printf "${PROJ_DIR}: ${C_LOCKED}Locked. Skipping.${C_RESET}\n"
+        continue
+    fi
 
     # Do a 'git fetch' if requested
     if [ "$DO_FETCH" -eq 1 ]; then
