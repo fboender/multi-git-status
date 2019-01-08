@@ -161,7 +161,7 @@ do
     NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
     # Find out if there are unstaged, uncomitted or untracked changes
-    UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD --; echo $?)
+    UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
     UNCOMMITTED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
     UNTRACKED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
     cd "$(dirname "$GIT_DIR")"
