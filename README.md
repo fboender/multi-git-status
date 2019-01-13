@@ -30,13 +30,22 @@ switch.
 
 # Usage
 
-    Usage: mgitstatus [-w] [-e] [-f] <DIR> [DEPTH=2]
-    
+    Usage: mgitstatus [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
+
     Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
       -w   Warn about dirs that are not Git repositories
       -e   Exclude repos that are 'ok'
       -f   Do a 'git fetch' on each repo (slow for many repos)
+
+    You can limit output with the following options:
+
+      --no-push
+      --no-pull
+      --no-upstream
+      --no-uncomitted
+      --no-untracked
+      --no-stashes
 
 The following example scans all directories under the current dir, with a
 depth of 2. That means the current dir and all directories directly under it.
