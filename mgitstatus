@@ -10,7 +10,6 @@ if [ -t 1 ]; then
     C_BLUE="\033[1;34m"
     C_PURPLE="\033[1;35m"
     C_CYAN="\033[1;36m"
-    C_WHITE="\033[1;37m"
     C_RESET="$(tput sgr0)"
 fi
 
@@ -61,7 +60,7 @@ NO_STASHES=0
 
 while [ \! -z "$1" ]; do
     # Stop reading when we've run out of options.
-    [ "$(echo $1 | cut -c 1)" != "-" ] && break
+    [ "$(echo "$1" | cut -c 1)" != "-" ] && break
 
     if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
         usage
@@ -111,13 +110,13 @@ else
 fi
 
 # Find all .git dirs, up to DEPTH levels deep
-find -L "$ROOT_DIR" -maxdepth $DEPTH -type d | while read PROJ_DIR
+find -L "$ROOT_DIR" -maxdepth "$DEPTH" -type d | while read -r PROJ_DIR
 do
     GIT_DIR="$PROJ_DIR/.git"
 
     # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
     if [ \! -d "$GIT_DIR" ]; then
-        if [ "$WARN_NOT_REPO" -eq 1 -a "$PROJ_DIR" != "." ]; then
+        if [ "$WARN_NOT_REPO" -eq 1 ] && [ "$PROJ_DIR" != "." ]; then
             printf "${PROJ_DIR}: not a git repo\n"
         fi
         continue
@@ -149,34 +148,35 @@ do
 
     for REF_HEAD in $(cd "$GIT_DIR/refs/heads" && find . -type 'f' | sed "s/^\.\///"); do
         # Check if this branch is tracking an upstream (local/remote branch)
-        UPSTREAM=$(git --git-dir "$GIT_DIR" rev-parse --abbrev-ref --symbolic-full-name $REF_HEAD@{u} 2>/dev/null)
-        if [ $? -eq 0 ]; then
+        UPSTREAM=$(git --git-dir "$GIT_DIR" rev-parse --abbrev-ref --symbolic-full-name "$REF_HEAD@{u}" 2>/dev/null)
+        EXIT_CODE="$?"
+        if [ "$EXIT_CODE" -eq 0 ]; then
             # Branch is tracking a remote branch. Find out how much behind /
             # ahead it is of that remote branch.
-            CNT_AHEAD_BEHIND=$(git --git-dir "$GIT_DIR" rev-list --left-right --count $REF_HEAD...$UPSTREAM)
-            CNT_AHEAD=$(echo $CNT_AHEAD_BEHIND | awk '{ print $1 }')
-            CNT_BEHIND=$(echo $CNT_AHEAD_BEHIND | awk '{ print $2 }')
+            CNT_AHEAD_BEHIND=$(git --git-dir "$GIT_DIR" rev-list --left-right --count "$REF_HEAD...$UPSTREAM")
+            CNT_AHEAD=$(echo "$CNT_AHEAD_BEHIND" | awk '{ print $1 }')
+            CNT_BEHIND=$(echo "$CNT_AHEAD_BEHIND" | awk '{ print $2 }')
 
-            [ $DEBUG -eq 1 ] && echo CNT_AHEAD_BEHIND: $CNT_AHEAD_BEHIND
-            [ $DEBUG -eq 1 ] && echo CNT_AHEAD: $CNT_AHEAD
-            [ $DEBUG -eq 1 ] && echo CNT_BEHIND: $CNT_BEHIND
+            [ $DEBUG -eq 1 ] && echo "CNT_AHEAD_BEHIND: $CNT_AHEAD_BEHIND"
+            [ $DEBUG -eq 1 ] && echo "CNT_AHEAD: $CNT_AHEAD"
+            [ $DEBUG -eq 1 ] && echo "CNT_BEHIND: $CNT_BEHIND"
 
-            if [ $CNT_AHEAD -gt 0 ]; then
+            if [ "$CNT_AHEAD" -gt 0 ]; then
                 NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES}\n$REF_HEAD"
             fi
-            if [ $CNT_BEHIND -gt 0 ]; then
+            if [ "$CNT_BEHIND" -gt 0 ]; then
                 NEEDS_PULL_BRANCHES="${NEEDS_PULL_BRANCHES}\n$REF_HEAD"
             fi
 
             # Check if this branch is a branch off another branch. and if it needs
             # to be updated.
-            REV_LOCAL=$(git --git-dir "$GIT_DIR" rev-parse --verify $REF_HEAD 2>/dev/null)
-            REV_REMOTE=$(git --git-dir "$GIT_DIR" rev-parse --verify origin/$REF_HEAD 2>/dev/null)
-            REV_BASE=$(git --git-dir "$GIT_DIR" merge-base $REF_HEAD origin/$REF_HEAD 2>/dev/null)
+            REV_LOCAL=$(git --git-dir "$GIT_DIR" rev-parse --verify "$REF_HEAD" 2>/dev/null)
+            REV_REMOTE=$(git --git-dir "$GIT_DIR" rev-parse --verify "origin/$REF_HEAD" 2>/dev/null)
+            REV_BASE=$(git --git-dir "$GIT_DIR" merge-base "$REF_HEAD" "origin/$REF_HEAD" 2>/dev/null)
 
-            [ $DEBUG -eq 1 ] && echo REV_LOCAL: $REV_LOCAL
-            [ $DEBUG -eq 1 ] && echo REV_REMOTE: $REV_REMOTE
-            [ $DEBUG -eq 1 ] && echo REV_BASE: $REV_BASE
+            [ $DEBUG -eq 1 ] && echo "REV_LOCAL: $REV_LOCAL"
+            [ $DEBUG -eq 1 ] && echo "REV_REMOTE: $REV_REMOTE"
+            [ $DEBUG -eq 1 ] && echo "REV_BASE: $REV_BASE"
 
             if [ "$REV_LOCAL" = "$REV_REMOTE" ]; then
                 : # NOOP
@@ -204,9 +204,9 @@ do
     UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
     UNCOMMITTED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
     UNTRACKED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
-    cd "$(dirname "$GIT_DIR")"
+    cd "$(dirname "$GIT_DIR")" || exit
     STASHES=$(git stash list | wc -l)
-    cd $OLDPWD
+    cd "$OLDPWD" || exit
 
     # Build up the status string
     IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
@@ -220,7 +220,7 @@ do
     if [ \! -z "$NEEDS_UPSTREAM_BRANCHES" ] && [ "$NO_UPSTREAM" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_UPSTREAM}Needs upstream ($NEEDS_UPSTREAM_BRANCHES)${C_RESET} "
     fi
-    if [ "$UNSTAGED" -ne 0 -o "$UNCOMMITTED" -ne 0 ] && [ "$NO_UNCOMMITTED" -eq 0 ]; then
+    if [ "$UNSTAGED" -ne 0 ] || [ "$UNCOMMITTED" -ne 0 ] && [ "$NO_UNCOMMITTED" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_COMMIT}Uncommitted changes${C_RESET} "
     fi
     if [ "$UNTRACKED" != "" ] && [ "$NO_UNTRACKED" -eq 0 ]; then
@@ -235,7 +235,7 @@ do
     fi
 
     # Print the output, unless repo is 'ok' and -e was specified
-    if [ "$IS_OK" -ne 1 -o "$EXCLUDE_OK" -ne 1 ]; then
+    if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
         printf "${PROJ_DIR}: $STATUS_NEEDS\n"
     fi
 done

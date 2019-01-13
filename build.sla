@@ -1,0 +1,11 @@
+#
+# This is a script containing functions that are used as build rules. You can
+# use the Simple Little Automator (https://github.com/fboender/sla.git) to run
+# these rules, or you can run them directly in your shell:
+#
+#   $ bash -c ". build.sla && test"
+#
+
+test () {
+    shellcheck -e SC1117,SC2057,SC2059 mgitstatus
+}
