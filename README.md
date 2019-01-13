@@ -7,7 +7,7 @@ Show uncommited, untracked and unpushed changes in multiple Git repositories.
 
 multi-git-status shows:
 
-* **Uncomitted changes** if there are unstaged or uncommitted changes on the
+* **Uncommitted changes** if there are unstaged or uncommitted changes on the
   checked out branch.
 * **Untracked files** if there are untracked files which are not ignored.
 * **Needs push (BRANCH)** if the branch is tracking a (remote) branch which is
@@ -43,7 +43,7 @@ switch.
       --no-push
       --no-pull
       --no-upstream
-      --no-uncomitted
+      --no-uncommitted
       --no-untracked
       --no-stashes
 
