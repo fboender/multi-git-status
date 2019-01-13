@@ -25,26 +25,48 @@ C_STASHES="$C_YELLOW"
 
 DEBUG=0
 
-# Handle commandline options
-if [ "$1" = "--help" ]; then
-    echo "Usage: $0 [-w] [-e] [DIR] [DEPTH=2]" >&2
-    echo
-    echo "Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status"
-    echo
-    echo "  -w   Warn about dirs that are not Git repositories"
-    echo "  -e   Exclude repos that are 'ok'"
-    echo "  -f   Do a 'git fetch' on each repo (slow for many repos)"
-    exit 1
-fi
+usage () {
+    cat << EOF >&2
+    
+Usage: $0 [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
 
+Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
+
+  -w   Warn about dirs that are not Git repositories
+  -e   Exclude repos that are 'ok'
+  -f   Do a 'git fetch' on each repo (slow for many repos)
+
+You can limit output with the following options:
+
+  --no-push
+  --no-pull
+  --no-upstream
+  --no-uncomitted
+  --no-untracked
+  --no-stashes
+    
+EOF
+}
+
+# Handle commandline options
 WARN_NOT_REPO=0
 EXCLUDE_OK=0
 DO_FETCH=0
+NO_PUSH=0
+NO_PULL=0
+NO_UPSTREAM=0
+NO_UNCOMMITTED=0
+NO_UNTRACKED=0
+NO_STASHES=0
 
 while [ \! -z "$1" ]; do
-    # Stop reading when we don't recognise the arguments anymore
-    [ "$1" != "-w" -a "$1" != "-e" -a "$1" != "-f" ] && break
+    # Stop reading when we've run out of options.
+    [ "$(echo $1 | cut -c 1)" != "-" ] && break
 
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        usage
+        exit 1
+    fi
     if [ "$1" = "-w" ]; then
         WARN_NOT_REPO=1
     fi
@@ -53,6 +75,24 @@ while [ \! -z "$1" ]; do
     fi
     if [ "$1" = "-f" ]; then
         DO_FETCH=1
+    fi
+    if [ "$1" = "--no-push" ]; then
+        NO_PUSH=1
+    fi
+    if [ "$1" = "--no-pull" ]; then
+        NO_PULL=1
+    fi
+    if [ "$1" = "--no-upstream" ]; then
+        NO_UPSTREAM=1
+    fi
+    if [ "$1" = "--no-uncommitted" ]; then
+        NO_UNCOMMITTED=1
+    fi
+    if [ "$1" = "--no-untracked" ]; then
+        NO_UNTRACKED=1
+    fi
+    if [ "$1" = "--no-stashes" ]; then
+        NO_STASHES=1
     fi
 
     shift
@@ -171,22 +211,22 @@ do
     # Build up the status string
     IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
     STATUS_NEEDS=""
-    if [ \! -z "$NEEDS_PUSH_BRANCHES" ]; then
+    if [ \! -z "$NEEDS_PUSH_BRANCHES" ] && [ "$NO_PUSH" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
     fi
-    if [ \! -z "$NEEDS_PULL_BRANCHES" ]; then
+    if [ \! -z "$NEEDS_PULL_BRANCHES" ] && [ "$NO_PULL" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PULL}Needs pull ($NEEDS_PULL_BRANCHES)${C_RESET} "
     fi
-    if [ \! -z "$NEEDS_UPSTREAM_BRANCHES" ]; then
+    if [ \! -z "$NEEDS_UPSTREAM_BRANCHES" ] && [ "$NO_UPSTREAM" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_UPSTREAM}Needs upstream ($NEEDS_UPSTREAM_BRANCHES)${C_RESET} "
     fi
-    if [ "$UNSTAGED" -ne 0 -o "$UNCOMMITTED" -ne 0 ]; then
+    if [ "$UNSTAGED" -ne 0 -o "$UNCOMMITTED" -ne 0 ] && [ "$NO_UNCOMMITTED" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_COMMIT}Uncommitted changes${C_RESET} "
     fi
-    if [ "$UNTRACKED" != "" ]; then
+    if [ "$UNTRACKED" != "" ] && [ "$NO_UNTRACKED" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_UNTRACKED}Untracked files${C_RESET} "
     fi
-    if [ "$STASHES" -ne 0 ]; then
+    if [ "$STASHES" -ne 0 ] && [ "$NO_STASHES" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_STASHES}$STASHES stashes${C_RESET} "
     fi
     if [ "$STATUS_NEEDS" = "" ]; then
