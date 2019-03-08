@@ -10,6 +10,7 @@ if [ -t 1 ]; then
     C_BLUE="\033[1;34m"
     C_PURPLE="\033[1;35m"
     C_CYAN="\033[1;36m"
+    C_LIGHT_GREEN="\033[1;92m"
     C_RESET="$(tput sgr0)"
 fi
 
@@ -21,12 +22,31 @@ C_NEEDS_COMMIT="$C_RED"
 C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
+C_USERNAME="$C_LIGHT_GREEN"
 
 DEBUG=0
 
+# Parse the given git remote url
+# Return the username for a better readability when printing the status
+# Thanks to https://serverfault.com/a/917253
+getUsername () {
+  url=$1
+  re="^(https|git)(:\/\/|@)([^\/:]+)[\/:]([^\/:]+)\/(.+).git$"
+
+  if [[ $url =~ $re ]]; then
+      protocol=${BASH_REMATCH[1]}
+      separator=${BASH_REMATCH[2]}
+      hostname=${BASH_REMATCH[3]}
+      username=${BASH_REMATCH[4]}
+      repo=${BASH_REMATCH[5]}
+  fi
+
+  echo "$username"
+}
+
 usage () {
     cat << EOF >&2
-    
+
 Usage: $0 [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
 
 Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
@@ -43,7 +63,7 @@ You can limit output with the following options:
   --no-uncommitted
   --no-untracked
   --no-stashes
-    
+
 EOF
 }
 
@@ -142,7 +162,7 @@ do
     # they need a push or pull. We do this with various tests and put the name
     # of the branches in NEEDS_XXXX, seperated by newlines. After we're done,
     # we remove duplicates from NEEDS_XXX.
-    NEEDS_PUSH_BRANCHES="" 
+    NEEDS_PUSH_BRANCHES=""
     NEEDS_PULL_BRANCHES=""
     NEEDS_UPSTREAM_BRANCHES=""
 
@@ -173,10 +193,12 @@ do
             REV_LOCAL=$(git --git-dir "$GIT_DIR" rev-parse --verify "$REF_HEAD" 2>/dev/null)
             REV_REMOTE=$(git --git-dir "$GIT_DIR" rev-parse --verify "origin/$REF_HEAD" 2>/dev/null)
             REV_BASE=$(git --git-dir "$GIT_DIR" merge-base "$REF_HEAD" "origin/$REF_HEAD" 2>/dev/null)
+            LS_REMOTE_URL=$(git --git-dir "$GIT_DIR" ls-remote --get-url 2>/dev/null)
 
             [ $DEBUG -eq 1 ] && echo "REV_LOCAL: $REV_LOCAL"
             [ $DEBUG -eq 1 ] && echo "REV_REMOTE: $REV_REMOTE"
             [ $DEBUG -eq 1 ] && echo "REV_BASE: $REV_BASE"
+            [ $DEBUG -eq 1 ] && echo "LS_REMOTE_URL: $LS_REMOTE_URL"
 
             if [ "$REV_LOCAL" = "$REV_REMOTE" ]; then
                 : # NOOP
@@ -210,6 +232,7 @@ do
 
     # Build up the status string
     IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
+    USERNAME=$(getUsername $LS_REMOTE_URL)
     STATUS_NEEDS=""
     if [ \! -z "$NEEDS_PUSH_BRANCHES" ] && [ "$NO_PUSH" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
@@ -236,6 +259,6 @@ do
 
     # Print the output, unless repo is 'ok' and -e was specified
     if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
-        printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+        printf "${PROJ_DIR}: ${C_USERNAME}$USERNAME${C_RESET} $STATUS_NEEDS\n"
     fi
 done
