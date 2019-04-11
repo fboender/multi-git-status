@@ -171,8 +171,8 @@ do
             # Check if this branch is a branch off another branch. and if it needs
             # to be updated.
             REV_LOCAL=$(git --git-dir "$GIT_DIR" rev-parse --verify "$REF_HEAD" 2>/dev/null)
-            REV_REMOTE=$(git --git-dir "$GIT_DIR" rev-parse --verify "origin/$REF_HEAD" 2>/dev/null)
-            REV_BASE=$(git --git-dir "$GIT_DIR" merge-base "$REF_HEAD" "origin/$REF_HEAD" 2>/dev/null)
+            REV_REMOTE=$(git --git-dir "$GIT_DIR" rev-parse --verify "$UPSTREAM" 2>/dev/null)
+            REV_BASE=$(git --git-dir "$GIT_DIR" merge-base "$REF_HEAD" "$UPSTREAM" 2>/dev/null)
 
             [ $DEBUG -eq 1 ] && echo "REV_LOCAL: $REV_LOCAL"
             [ $DEBUG -eq 1 ] && echo "REV_REMOTE: $REV_REMOTE"
