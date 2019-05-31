@@ -7,5 +7,9 @@
 #
 
 test () {
-    shellcheck -e SC1117,SC2057,SC2059 mgitstatus
+    IGNORE=""
+    IGNORE="${IGNORE}SC1117," # "Backslash is literal in..."
+    IGNORE="${IGNORE}SC2059"  # "Don't use variables in the printf format string."
+                              # But we need to or colors won't work
+    shellcheck -e $IGNORE mgitstatus
 }
