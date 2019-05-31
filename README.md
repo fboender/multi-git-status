@@ -25,7 +25,8 @@ Since there are a lot of different states a git repository can be in,
 multi-git-status makes no guarantees that *all* states are taken into account.
 
 multi-git-status can also list dirs that are not a repo, if given the `-w`
-switch.
+switch. To ignore certain repos, set the `mgitstatus.ignore` git config flag
+for that repo to `true`. (See "usage" below for an example).
 
 
 # Usage
