@@ -113,6 +113,13 @@ fi
 find -L "$ROOT_DIR" -maxdepth "$DEPTH" -type d | while read -r PROJ_DIR
 do
     GIT_DIR="$PROJ_DIR/.git"
+    GIT_CONF="$PROJ_DIR/.git/config"
+    
+    # Check git config for this project to see if we should ignore this repo.
+    IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
+    if [ "$IGNORE" = "true" ]; then
+        continue
+    fi
 
     # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
     if [ \! -d "$GIT_DIR" ]; then

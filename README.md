@@ -71,6 +71,11 @@ To scan deeper:
     ./fboender/scriptform: Uncommitted changes 
     ./fboender/startpage: ok 
 
+To ignore a repo, set the `mgitstatus.ignore` git configuration option for
+that repo to `true`. E.g.:
+
+    $ cd stupidrepo
+    $ git config --local mgitstatus.ignore true
 
 # Installation
 
