@@ -195,11 +195,10 @@ do
                     NEEDS_PUSH_BRANCHES="${NEEDS_PUSH_BRANCHES}\n$REF_HEAD"
                 fi
             fi
-            else
-                # Branch does not have an upstream (local/remote branch).
-                NEEDS_UPSTREAM_BRANCHES="${NEEDS_UPSTREAM_BRANCHES}\n$REF_HEAD"
-            fi
-
+        else
+            # Branch does not have an upstream (local/remote branch).
+            NEEDS_UPSTREAM_BRANCHES="${NEEDS_UPSTREAM_BRANCHES}\n$REF_HEAD"
+        fi
     done
 
     # Remove duplicates from NEEDS_XXXX and make comma-seperated
