@@ -60,7 +60,7 @@ NO_STASHES=0
 
 while [ ! -z "$1" ]; do
     # Stop reading when we've run out of options.
-    [ "$(echo "$1" | cut -c 1)" != "-" ] && break
+    [ "$(printf "%s" "$1" | cut -c 1)" != "-" ] && break
 
     if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
         usage
