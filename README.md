@@ -38,6 +38,7 @@ for that repo to `true`. (See "usage" below for an example).
       -w   Warn about dirs that are not Git repositories
       -e   Exclude repos that are 'ok'
       -f   Do a 'git fetch' on each repo (slow for many repos)
+      -c   Force color output (preserve colors when using pipes)
 
     You can limit output with the following options:
 
