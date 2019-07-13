@@ -113,6 +113,7 @@ C_NEEDS_COMMIT="$C_RED"
 C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
+C_NOT_IN_MASTER="$C_PURPLE"
 
 # Find all .git dirs, up to DEPTH levels deep
 find -L "$ROOT_DIR" -maxdepth "$DEPTH" -type d | while read -r PROJ_DIR
@@ -245,8 +246,14 @@ do
         STATUS_NEEDS="${STATUS_NEEDS}${C_OK}ok${C_RESET} "
     fi
 
+    # Get currently active branch and color if not "master"
+    CURR_BRANCH="$(cd ${PROJ_DIR} && git rev-parse --abbrev-ref HEAD)"
+    if [ "$CURR_BRANCH" != "master" ]; then
+        CURR_BRANCH="${C_NOT_IN_MASTER}$CURR_BRANCH${C_RESET}"
+    fi
+
     # Print the output, unless repo is 'ok' and -e was specified
     if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
-        printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+        printf "${PROJ_DIR}(${CURR_BRANCH}): $STATUS_NEEDS\n"
     fi
 done
