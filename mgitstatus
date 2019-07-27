@@ -40,7 +40,7 @@ NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
 
-while [ ! -z "$1" ]; do
+while [ -n "$1" ]; do
     # Stop reading when we've run out of options.
     [ "$(printf "%s" "$1" | cut -c 1)" != "-" ] && break
 
@@ -222,13 +222,13 @@ do
     # Build up the status string
     IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
     STATUS_NEEDS=""
-    if [ ! -z "$NEEDS_PUSH_BRANCHES" ] && [ "$NO_PUSH" -eq 0 ]; then
+    if [ -n "$NEEDS_PUSH_BRANCHES" ] && [ "$NO_PUSH" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
     fi
-    if [ ! -z "$NEEDS_PULL_BRANCHES" ] && [ "$NO_PULL" -eq 0 ]; then
+    if [ -n "$NEEDS_PULL_BRANCHES" ] && [ "$NO_PULL" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PULL}Needs pull ($NEEDS_PULL_BRANCHES)${C_RESET} "
     fi
-    if [ ! -z "$NEEDS_UPSTREAM_BRANCHES" ] && [ "$NO_UPSTREAM" -eq 0 ]; then
+    if [ -n "$NEEDS_UPSTREAM_BRANCHES" ] && [ "$NO_UPSTREAM" -eq 0 ]; then
         STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_UPSTREAM}Needs upstream ($NEEDS_UPSTREAM_BRANCHES)${C_RESET} "
     fi
     if [ "$UNSTAGED" -ne 0 ] || [ "$UNCOMMITTED" -ne 0 ] && [ "$NO_UNCOMMITTED" -eq 0 ]; then
