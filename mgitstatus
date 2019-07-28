@@ -2,19 +2,21 @@
 
 # MIT license
 
+VERSION="1.0"
 DEBUG=0
 
 usage () {
     cat << EOF >&2
     
-Usage: $0 [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
+Usage: $0 ]--version] [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
 
 Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
-  -w   Warn about dirs that are not Git repositories
-  -e   Exclude repos that are 'ok'
-  -f   Do a 'git fetch' on each repo (slow for many repos)
-  -c   Force color output (preserve colors when using pipes)
+  --version  Show version
+  -w         Warn about dirs that are not Git repositories
+  -e         Exclude repos that are 'ok'
+  -f         Do a 'git fetch' on each repo (slow for many repos)
+  -c         Force color output (preserve colors when using pipes)
 
 You can limit output with the following options:
 
@@ -44,6 +46,10 @@ while [ -n "$1" ]; do
     # Stop reading when we've run out of options.
     [ "$(printf "%s" "$1" | cut -c 1)" != "-" ] && break
 
+    if [ "$1" = "--version" ]; then
+        echo "v$VERSION"
+        exit 0
+    fi
     if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
         usage
         exit 1
