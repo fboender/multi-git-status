@@ -7,6 +7,7 @@
 #
 
 test () {
+    # Test / lint
     IGNORE=""
     IGNORE="${IGNORE}SC1117," # "Backslash is literal in..."
     IGNORE="${IGNORE}SC2059"  # "Don't use variables in the printf format string."
