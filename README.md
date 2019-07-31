@@ -31,14 +31,15 @@ for that repo to `true`. (See "usage" below for an example).
 
 # Usage
 
-    Usage: mgitstatus [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
+    Usage: mgitstatus [--version] [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
 
     Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
-      -w   Warn about dirs that are not Git repositories
-      -e   Exclude repos that are 'ok'
-      -f   Do a 'git fetch' on each repo (slow for many repos)
-      -c   Force color output (preserve colors when using pipes)
+      --version   Show version
+      -w          Warn about dirs that are not Git repositories
+      -e          Exclude repos that are 'ok'
+      -f          Do a 'git fetch' on each repo (slow for many repos)
+      -c          Force color output (preserve colors when using pipes)
 
     You can limit output with the following options:
 
