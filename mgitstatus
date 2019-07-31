@@ -8,7 +8,7 @@ DEBUG=0
 usage () {
     cat << EOF >&2
     
-Usage: $0 ]--version] [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
+Usage: $0 [--version] [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
 
 Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
 
