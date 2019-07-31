@@ -14,3 +14,8 @@ test () {
                               # But we need to or colors won't work
     shellcheck -e $IGNORE mgitstatus
 }
+
+man () {
+    # Build the man page from markdown source
+    pandoc ./mgitstatus.1.md -s -t man > mgitstatus.1
+}
