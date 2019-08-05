@@ -89,7 +89,7 @@ mgitstatus requires a POSIX compliant shell. Bash will do fine.
 
 Or follow these instructions:
 
-    $ curl -s -o mgitstatus https://raw.githubusercontent.com/fboender/mgitstatus/master/mgitstatus
+    $ curl -s -o mgitstatus https://raw.githubusercontent.com/fboender/multi-git-status/master/mgitstatus
     $ chmod 755 mgitstatus
     $ sudo mv mgitstatus /usr/local/bin/
 
