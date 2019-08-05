@@ -10,7 +10,9 @@ usage () {
     
 Usage: $0 [--version] [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
 
-Scan for .git dirs under DIR (up to DEPTH dirs deep) and show git status
+Scan for .git dirs under DIR and show git status. The scan goes 2
+directories deep by default or the number specified by DEPTH deep.
+If DEPTH=0, the scan is infinitely deep.
 
   --version  Show version
   -w         Warn about dirs that are not Git repositories
@@ -96,6 +98,8 @@ fi
 
 if [ -z "$2" ]; then
     DEPTH=2
+elif [ "$2" -eq 0 ]; then
+    DEPTH=""
 else
     DEPTH="$2"
 fi
@@ -121,7 +125,7 @@ C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
 
 # Find all .git dirs, up to DEPTH levels deep
-find -L "$ROOT_DIR" -maxdepth "$DEPTH" -type d | while read -r PROJ_DIR
+find -L "$ROOT_DIR" ${DEPTH:+"-maxdepth"} ${DEPTH:+"$DEPTH"} -type d | while read -r PROJ_DIR
 do
     GIT_DIR="$PROJ_DIR/.git"
     GIT_CONF="$PROJ_DIR/.git/config"
