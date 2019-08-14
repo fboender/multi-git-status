@@ -229,6 +229,11 @@ do
     STASHES=$(git stash list | wc -l)
     cd "$OLDPWD" || exit
 
+    # Provide the current branch name
+    cd "$(dirname "$GIT_DIR")" || exit
+    BNAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+    cd "$OLDPWD" || exit
+
     # Build up the status string
     IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
     STATUS_NEEDS=""
@@ -257,6 +262,6 @@ do
 
     # Print the output, unless repo is 'ok' and -e was specified
     if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
-        printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+        printf "${PROJ_DIR} ($BNAME): $STATUS_NEEDS\n"
     fi
 done
