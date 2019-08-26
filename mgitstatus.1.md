@@ -87,14 +87,20 @@ their status:
     ./fboender/multi-git-status: Needs push (master) Untracked files
     ./other/peewee: ok 
 
-To scan deeper (three dirs instead of two):
+To scan deeper (three dirs instead of two) in the current dir:
 
-    $ mgitstatus 3
+    $ mgitstatus . 3
 
 The following command scans three levels deep in `/opt/deploy/` and hides
 repos that are 'ok'. It does not show stashes:
 
-    $ mgitstatus -e --no-stashes 3 /opt/deploy
+    $ mgitstatus -e --no-stashes /opt/deploy 3
+
+To ignore a repo, set the `mgitstatus.ignore` git configuration option for
+that repo to `true`. E.g.:
+
+    $ cd stupidrepo
+    $ git config --local mgitstatus.ignore true
 
 # COPYRIGHT
 
