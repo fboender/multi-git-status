@@ -19,6 +19,8 @@ If DEPTH=0, the scan is infinitely deep.
   -e         Exclude repos that are 'ok'
   -f         Do a 'git fetch' on each repo (slow for many repos)
   -c         Force color output (preserve colors when using pipes)
+  -l [list]  Use given list of local GIT repository paths instead of searching
+  -s [list]  Search repositories and append to the given list, then exit.
 
 You can limit output with the following options:
 
@@ -28,7 +30,9 @@ You can limit output with the following options:
   --no-uncommitted
   --no-untracked
   --no-stashes
-    
+
+The list of git repository paths might have comments (lines starting with '#') and empty lines.
+
 EOF
 }
 
@@ -43,6 +47,8 @@ NO_UPSTREAM=0
 NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
+LIST=''
+SAVE_LIST=''
 
 while [ -n "$1" ]; do
     # Stop reading when we've run out of options.
@@ -86,6 +92,14 @@ while [ -n "$1" ]; do
     if [ "$1" = "--no-stashes" ]; then
         NO_STASHES=1
     fi
+    if [ "$1" = "--list" -o "$1" = "-l" ]; then
+        shift
+        LIST="$1"
+    fi
+    if [ "$1" = "--save-list" -o "$1" = "-s" ]; then
+        shift
+        SAVE_LIST="$1"
+    fi
 
     shift
 done
@@ -124,9 +138,54 @@ C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
 
+if [ "$SAVE_LIST" != "" ]; then
+    temp="$(mktemp)"
+    (
+        if [ -f "$SAVE_LIST" ]; then
+            cat "$SAVE_LIST"
+        fi
+        find -L "$ROOT_DIR" ${DEPTH:+"-maxdepth"} ${DEPTH:+"$DEPTH"} -type d | while read -r PROJ_DIR
+        do
+            GIT_DIR="$PROJ_DIR/.git"
+            GIT_CONF="$PROJ_DIR/.git/config"
+
+            # Check git config for this project to see if we should ignore this repo.
+            IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
+            if [ "$IGNORE" = "true" ]; then
+                continue
+            fi
+
+            # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
+            if [ ! -d "$GIT_DIR" ]; then
+                if [ "$WARN_NOT_REPO" -eq 1 ] && [ "$PROJ_DIR" != "." ]; then
+                    printf "${PROJ_DIR}: not a git repo\n" >&2
+                fi
+                continue
+            fi
+            d="$ROOT_DIR/${PROJ_DIR##./}"
+            case "$d" in
+            /*) echo "$d";;
+            *) echo "$PWD/${d##./}"
+            esac
+        done
+
+    ) | awk '$0 ~ /^\s*(#|$)/ || !seen[$0]++' > $temp
+    mv $temp "$SAVE_LIST"
+    # awk script from Vito Chou (https://stackoverflow.com/a/54803217)
+    exit
+fi
+
 # Find all .git dirs, up to DEPTH levels deep
-find -L "$ROOT_DIR" ${DEPTH:+"-maxdepth"} ${DEPTH:+"$DEPTH"} -type d | while read -r PROJ_DIR
+(
+  if [ "$LIST" = "" ]; then
+    find -L "$ROOT_DIR" ${DEPTH:+"-maxdepth"} ${DEPTH:+"$DEPTH"} -type d
+  else
+    cat "$LIST"
+  fi
+) | while read -r PROJ_DIR
 do
+    if [ "${PROJ_DIR###}" != "${PROJ_DIR}" ]; then continue; fi
+    if [ "${PROJ_DIR## }" = "" ]; then continue; fi
     GIT_DIR="$PROJ_DIR/.git"
     GIT_CONF="$PROJ_DIR/.git/config"
     
