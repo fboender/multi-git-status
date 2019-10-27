@@ -19,7 +19,7 @@ If DEPTH=0, the scan is infinitely deep.
   -e         Exclude repos that are 'ok'
   -f         Do a 'git fetch' on each repo (slow for many repos)
   -c         Force color output (preserve colors when using pipes)
-  -l [list]  Use given list of local GIT repositories instead of searching
+  -l [list]  Use given list of local GIT repository paths instead of searching
   -s [list]  Search repositories and append to the given list, then exit.
 
 You can limit output with the following options:
@@ -30,7 +30,9 @@ You can limit output with the following options:
   --no-uncommitted
   --no-untracked
   --no-stashes
-    
+
+The list of git repository paths might have comments (lines starting with '#') and empty lines.
+
 EOF
 }
 
@@ -167,7 +169,7 @@ if [ "$SAVE_LIST" != "" ]; then
             esac
         done
 
-    ) | awk '!seen[$0]++' > $temp
+    ) | awk '$0 ~ /^\s*(#|$)/ || !seen[$0]++' > $temp
     mv $temp "$SAVE_LIST"
     # awk script from Vito Chou (https://stackoverflow.com/a/54803217)
     exit
@@ -182,6 +184,8 @@ fi
   fi
 ) | while read -r PROJ_DIR
 do
+    if [ "${PROJ_DIR###}" != "${PROJ_DIR}" ]; then continue; fi
+    if [ "${PROJ_DIR## }" = "" ]; then continue; fi
     GIT_DIR="$PROJ_DIR/.git"
     GIT_CONF="$PROJ_DIR/.git/config"
     
