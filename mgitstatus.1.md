@@ -8,7 +8,7 @@ mgitstatus – Show uncommitted, untracked and unpushed changes for multiple Git
 
 # SYNOPSIS
 
- **mgitstatus** [**--version**] [**-w**] [**-e**] [**-f**] [**--no-X**] [**-d/--depth**=2] [**DIR**]
+ **mgitstatus** [**--version**] [**-w**] [**-e**] [**-f**] [**--no-X**] [**-d/--depth**=2] [**DIR** [**DIR**]...]
 
 # DESCRIPTION
 

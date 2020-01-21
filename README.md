@@ -33,17 +33,19 @@ for that repo to `true`. (See "usage" below for an example).
 
 # Usage
 
-    Usage: mgitstatus [--version] [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
+    Usage: ./mgitstatus [--version] [-w] [-e] [-f] [--no-X] [-d/--depth=2] [DIR [DIR]...]
 
-    Scan for .git dirs under DIR and show git status. The scan goes 2
-    directories deep by default or the number specified by DEPTH deep.
-    If DEPTH=0, the scan is infinitely deep.
+    mgitstatus shows uncommited, untracked and unpushed changes in multiple Git
+    repositories.  By default, mgitstatus scans two directories deep. This can be
+    changed with the -d (--depth) option.  If DEPTH is 0, the scan is infinitely
+    deep.
 
-      --version   Show version
-      -w          Warn about dirs that are not Git repositories
-      -e          Exclude repos that are 'ok'
-      -f          Do a 'git fetch' on each repo (slow for many repos)
-      -c          Force color output (preserve colors when using pipes)
+      --version      Show version
+      -w             Warn about dirs that are not Git repositories
+      -e             Exclude repos that are 'ok'
+      -f             Do a 'git fetch' on each repo (slow for many repos)
+      -c             Force color output (preserve colors when using pipes)
+      -d, --depth=2  Scan this many directories deep
 
     You can limit output with the following options:
 

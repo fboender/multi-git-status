@@ -9,15 +9,16 @@ multiple Git repos.
 .SH SYNOPSIS
 .PP
 \f[B]mgitstatus\f[] [\f[B]\-\-version\f[]] [\f[B]\-w\f[]] [\f[B]\-e\f[]]
-[\f[B]\-f\f[]] [\f[B]\-\-no\-X\f[]] [\f[B]DIR\f[]] [\f[B]DEPTH=2\f[]]
+[\f[B]\-f\f[]] [\f[B]\-\-no\-X\f[]] [\f[B]\-d/\-\-depth\f[]=2]
+[\f[B]DIR\f[] [\f[B]DIR\f[]]...]
 .SH DESCRIPTION
 .PP
 \f[B]mgitstatus\f[] shows uncommited, untracked and unpushed changes in
 multiple Git repositories.
-\f[B]mgitstatus\f[] scans for .git dirs up to \f[B]DEPTH\f[] directories
-deep.
-The default is 2.
+By default, \f[B]mgitstatus\f[] scans two directories deep.
+This can be changed with the \f[C]\-d\f[] (\f[C]\-\-depth\f[]) option.
 If \f[B]DEPTH\f[] is 0, the scan is infinitely deep.
+.PP
 mgitstatus shows:
 .IP \[bu] 2
 \f[B]Uncommitted changes\f[] if there are unstaged or uncommitted
@@ -70,6 +71,13 @@ Do a \[aq]git fetch\[aq] on each repo (slow for many repos)
 Force color output (preserve colors when using pipes)
 .RS
 .RE
+.TP
+.B \f[B]\-d, \-\-depth=2\f[]
+Scan this many directories deep.
+Default is 2.
+If \f[B]0\f[], the scan is infinitely deep
+.RS
+.RE
 .PP
 You can limit output with the following options:
 .TP
@@ -120,7 +128,7 @@ To scan deeper (three dirs instead of two) in the current dir:
 .IP
 .nf
 \f[C]
-$\ mgitstatus\ .\ 3
+$\ mgitstatus\ \-d\ 3
 \f[]
 .fi
 .PP
@@ -130,7 +138,7 @@ It does not show stashes:
 .IP
 .nf
 \f[C]
-$\ mgitstatus\ \-e\ \-\-no\-stashes\ /opt/deploy\ 3
+$\ mgitstatus\ \-e\ \-\-no\-stashes\ \-d\ 3\ /opt/deploy
 \f[]
 .fi
 .PP
@@ -146,7 +154,7 @@ $\ git\ config\ \-\-local\ mgitstatus.ignore\ true
 .fi
 .SH COPYRIGHT
 .PP
-Copyright 2016\-2019, Ferry Boender.
+Copyright 2016\-2020, Ferry Boender.
 .PP
 Licensed under the MIT license.
 For more information, see the LICENSE.txt file.
