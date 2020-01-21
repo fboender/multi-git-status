@@ -65,29 +65,7 @@ depth of 2. That means the current dir and all directories directly under it.
     ./ansible-cmdb: Uncommitted changes Untracked files 
     ./scriptform: Uncommitted changes 
 
-To scan deeper (three dirs instead of two) in the current dir:
-
-    ~/Projects $ mgitstatus . 3
-    ./megacorp/ansible: ok 
-    ./megacorp/monitoring: ok 
-    ./fboender/mgitstatus: ok 
-    ./fboender/mdpreview: ok 
-    ./fboender/snippets: ok 
-    ./fboender/boxes: ok 
-    ./fboender/ansible-cmdb: Uncommitted changes Untracked files 
-    ./fboender/scriptform: Uncommitted changes 
-    ./fboender/startpage: ok 
-
-The following command scans three levels deep in `/opt/deploy/` and hides
-repos that are 'ok'. It does not show stashes:
-
-    $ mgitstatus -e --no-stashes /opt/deploy 3
-
-To ignore a repo, set the `mgitstatus.ignore` git configuration option for
-that repo to `true`. E.g.:
-
-    $ cd stupidrepo
-    $ git config --local mgitstatus.ignore true
+For more examples, see the [manual page](mgitstatus.1.md).
 
 # Installation
 
