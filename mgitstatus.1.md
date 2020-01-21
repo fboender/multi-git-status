@@ -8,14 +8,16 @@ mgitstatus – Show uncommitted, untracked and unpushed changes for multiple Git
 
 # SYNOPSIS
 
- **mgitstatus** [**--version**] [**-w**] [**-e**] [**-f**] [**--no-X**] [**DIR**] [**DEPTH=2**]
+ **mgitstatus** [**--version**] [**-w**] [**-e**] [**-f**] [**--no-X**] [**-d/--depth**=2] [**DIR**]
 
 # DESCRIPTION
 
 **mgitstatus** shows uncommited, untracked and unpushed changes in multiple
-Git repositories.  **mgitstatus** scans for .git dirs up to **DEPTH**
-directories deep.  The default is 2.  If **DEPTH** is 0, the scan is
-infinitely deep.  mgitstatus shows:
+Git repositories.  By default, **mgitstatus** scans two directories deep. This
+can be changed with the `-d` (`--depth`) option.  If **DEPTH** is 0, the scan
+is infinitely deep.
+
+mgitstatus shows:
 
 - **Uncommitted changes** if there are unstaged or uncommitted changes on the
   checked out branch.
@@ -56,6 +58,9 @@ mgitstatus makes no guarantees that all states are taken into account.
 **-c**
 :   Force color output (preserve colors when using pipes)
 
+**-d, --depth=2**
+:   Scan this many directories deep. Default is 2. If **0**, the scan is infinitely deep
+
 You can limit output with the following options:
 
 **--no-push**
@@ -89,12 +94,12 @@ their status:
 
 To scan deeper (three dirs instead of two) in the current dir:
 
-    $ mgitstatus . 3
+    $ mgitstatus -d 3
 
 The following command scans three levels deep in `/opt/deploy/` and hides
 repos that are 'ok'. It does not show stashes:
 
-    $ mgitstatus -e --no-stashes /opt/deploy 3
+    $ mgitstatus -e --no-stashes -d 3 /opt/deploy
 
 To ignore a repo, set the `mgitstatus.ignore` git configuration option for
 that repo to `true`. E.g.:

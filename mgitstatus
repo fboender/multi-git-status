@@ -8,17 +8,19 @@ DEBUG=0
 usage () {
     cat << EOF >&2
     
-Usage: $0 [--version] [-w] [-e] [-f] [--no-X] [DIR] [DEPTH=2]
+Usage: $0 [--version] [-w] [-e] [-f] [--no-X] [-d/--depth=2] [DIR]
 
-Scan for .git dirs under DIR and show git status. The scan goes 2
-directories deep by default or the number specified by DEPTH deep.
-If DEPTH=0, the scan is infinitely deep.
+mgitstatus shows uncommited, untracked and unpushed changes in multiple Git
+repositories.  By default, mgitstatus scans two directories deep. This can be
+changed with the -d (--depth) option.  If DEPTH is 0, the scan is infinitely
+deep.
 
-  --version  Show version
-  -w         Warn about dirs that are not Git repositories
-  -e         Exclude repos that are 'ok'
-  -f         Do a 'git fetch' on each repo (slow for many repos)
-  -c         Force color output (preserve colors when using pipes)
+  --version      Show version
+  -w             Warn about dirs that are not Git repositories
+  -e             Exclude repos that are 'ok'
+  -f             Do a 'git fetch' on each repo (slow for many repos)
+  -c             Force color output (preserve colors when using pipes)
+  -d, --depth=2  Scan this many directories deep
 
 You can limit output with the following options:
 
@@ -43,6 +45,7 @@ NO_UPSTREAM=0
 NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
+DEPTH=2
 
 while [ -n "$1" ]; do
     # Stop reading when we've run out of options.
@@ -86,6 +89,17 @@ while [ -n "$1" ]; do
     if [ "$1" = "--no-stashes" ]; then
         NO_STASHES=1
     fi
+    if [ "$1" = "-d" ] || [ "$1" = "--depth" ]; then
+        DEPTH="$2"
+        echo "$DEPTH" | grep -E "^[0-9]+$" > /dev/null 2>&1
+        IS_NUM="$?"
+        if [ "$IS_NUM" -ne 0 ]; then
+            echo "Invalid value for 'depth' (must be a number): $DEPTH" >&2
+            exit 1
+        fi
+        # Shift one extra param
+        shift
+    fi
 
     shift
 done
@@ -94,14 +108,6 @@ if [ -z "$1" ]; then
     ROOT_DIR="."
 else
     ROOT_DIR="$1"
-fi
-
-if [ -z "$2" ]; then
-    DEPTH=2
-elif [ "$2" -eq 0 ]; then
-    DEPTH=""
-else
-    DEPTH="$2"
 fi
 
 if [ -t 1 ] || [ "$FORCE_COLOR" -eq 1 ]; then
@@ -124,8 +130,16 @@ C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
 
-# Find all .git dirs, up to DEPTH levels deep
-find -L "$ROOT_DIR" ${DEPTH:+"-maxdepth"} ${DEPTH:+"$DEPTH"} -type d | while read -r PROJ_DIR
+# Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan in
+# infinitely deep
+FIND_OPTS=""
+if [ "$DEPTH" -ne 0 ]; then
+    FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
+fi
+
+# We *want* to expand parameters, so disable shellcheck for this error:
+# shellcheck disable=SC2086
+find -L "$ROOT_DIR" $FIND_OPTS -type d | while read -r PROJ_DIR
 do
     GIT_DIR="$PROJ_DIR/.git"
     GIT_CONF="$PROJ_DIR/.git/config"
