@@ -109,6 +109,6 @@ that repo to `true`. E.g.:
 
 # COPYRIGHT
 
-Copyright 2016-2019, Ferry Boender.
+Copyright 2016-2020, Ferry Boender.
 
 Licensed under the MIT license. For more information, see the LICENSE.txt file.
