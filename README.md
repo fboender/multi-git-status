@@ -73,14 +73,17 @@ For more examples, see the [manual page](mgitstatus.1.md).
 
 mgitstatus requires a POSIX compliant shell. Bash will do fine.
 
-1. Clone this git repo
-2. Copy `mgitstatus` somewhere in your PATH
+The following steps will install mgitstatus:
 
-Or follow these instructions:
+    # Clone the repo
+    $ git clone git@github.com:fboender/multi-git-status.git
+    $ cd multi-git-status
 
-    $ curl -s -o mgitstatus https://raw.githubusercontent.com/fboender/multi-git-status/master/mgitstatus
-    $ chmod 755 mgitstatus
-    $ sudo mv mgitstatus /usr/local/bin/
+    # Install globally (all users)
+    $ sudo ./install.sh
+
+    # Install locally (only your user)
+    $ PREFIX=~/.local ./install.sh
 
 # License
 
