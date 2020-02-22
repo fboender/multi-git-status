@@ -30,6 +30,7 @@ You can limit output with the following options:
   --no-uncommitted
   --no-untracked
   --no-stashes
+  --no-branch
     
 EOF
 }
@@ -45,6 +46,7 @@ NO_UPSTREAM=0
 NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
+NO_BRANCH=0
 DEPTH=2
 
 while [ -n "$1" ]; do
@@ -88,6 +90,9 @@ while [ -n "$1" ]; do
     fi
     if [ "$1" = "--no-stashes" ]; then
         NO_STASHES=1
+    fi
+    if [ "$1" = "--no-branch" ]; then
+        NO_BRANCH=1
     fi
     if [ "$1" = "-d" ] || [ "$1" = "--depth" ]; then
         DEPTH="$2"
@@ -242,6 +247,7 @@ for DIR in "${@:-"."}"; do
         # Build up the status string
         IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
         STATUS_NEEDS=""
+        BRANCH=""
         if [ -n "$NEEDS_PUSH_BRANCHES" ] && [ "$NO_PUSH" -eq 0 ]; then
             STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
         fi
@@ -264,10 +270,13 @@ for DIR in "${@:-"."}"; do
             IS_OK=1
             STATUS_NEEDS="${STATUS_NEEDS}${C_OK}ok${C_RESET} "
         fi
+        if [ "$NO_BRANCH" -eq 0 ]; then
+            BRANCH=" ($(git --git-dir "$GIT_DIR" rev-parse --abbrev-ref HEAD))"
+        fi
 
         # Print the output, unless repo is 'ok' and -e was specified
         if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
-            printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+            printf "${PROJ_DIR}${BRANCH}: $STATUS_NEEDS\n"
         fi
     done
 done
