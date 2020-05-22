@@ -89,8 +89,8 @@ while [ -n "$1" ]; do
     if [ "$1" = "--no-stashes" ]; then
         NO_STASHES=1
     fi
-    if [ "$1" = "-d" ] || [ "$1" = "--depth" ]; then
-        DEPTH="$2"
+    if [ "$1" = "-d" ] || [ "${1%=*}" = "--depth" ]; then
+        [ "$1" = "-d" ] && DEPTH="$2" || DEPTH="${1#*=}"
         echo "$DEPTH" | grep -E "^[0-9]+$" > /dev/null 2>&1
         IS_NUM="$?"
         if [ "$IS_NUM" -ne 0 ]; then
@@ -98,7 +98,7 @@ while [ -n "$1" ]; do
             exit 1
         fi
         # Shift one extra param
-        shift
+        [ "$1" = "-d" ] && shift
     fi
 
     shift
