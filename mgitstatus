@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # MIT license
 
@@ -131,15 +131,34 @@ if [ "$DEPTH" -ne 0 ]; then
     FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
 fi
 
+containsElement () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
+
 # Go through positional arguments (DIRs) or '.' if no argumnets are given
 for DIR in "${@:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
-    find -L "$DIR" $FIND_OPTS -type d | while read -r PROJ_DIR
-    do
+    readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -type d -print0)
+    [ $DEBUG -eq 1 ] && printf 'PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
+    i=0
+    while :; do
+        #printf ' -- PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
+        (("$i" > "${#PROJ_DIRS[@]}")) && break
+        PROJ_DIR="${PROJ_DIRS[$i]}"
+        i=$((i+1))
+
         GIT_DIR="$PROJ_DIR/.git"
-        GIT_CONF="$PROJ_DIR/.git/config"
-        
+        if [[ -f "$GIT_DIR" ]]; then 
+            # This is a submodule 
+            BARE_DIR="$(cat "$PROJ_DIR/.git" | awk '{print $2}')"
+            GIT_DIR="$(realpath "$PROJ_DIR/$BARE_DIR")"
+        fi
+        GIT_CONF="$GIT_DIR/config"
+
         # Check git config for this project to see if we should ignore this repo.
         IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
         if [ "$IGNORE" = "true" ]; then
@@ -164,11 +183,24 @@ for DIR in "${@:-"."}"; do
 
         # Do a 'git fetch' if requested
         if [ "$DO_FETCH" -eq 1 ]; then
-            git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" fetch -q >/dev/null
+            git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" fetch -q >/dev/null
         fi
 
         # Refresh the index, or we might get wrong results.
-        git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
+        git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
+
+        # Now we know we are dealing with a git repo. Find out its submodules:
+        SUBMODULES=($(cd "$PROJ_DIR"; git config --file=.gitmodules --get-regexp ^^submodule.*\.path$ | cut -d " " -f 2))
+        if [[ ! -z $SUBMODULES ]]; then 
+            # printf ' | Submodule: %s\n' "${SUBMODULES[@]}"
+            for submodule in "${SUBMODULES[@]}"; do
+                SUBMODULE_PATH="${PROJ_DIR%/}/${submodule}"
+                if ! containsElement "$SUBMODULE_PATH" "${PROJ_DIRS[@]}"; then
+                    #echo "...appending submodule path: $SUBMODULE_PATH"
+                    PROJ_DIRS+=( "$SUBMODULE_PATH" )
+                fi
+            done
+        fi
 
         # Find all remote branches that have been checked out and figure out if
         # they need a push or pull. We do this with various tests and put the name
@@ -232,12 +264,10 @@ for DIR in "${@:-"."}"; do
         NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
         # Find out if there are unstaged, uncommitted or untracked changes
-        UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
-        UNCOMMITTED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
-        UNTRACKED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
-        cd "$(dirname "$GIT_DIR")" || exit
-        STASHES=$(git stash list | wc -l)
-        cd "$OLDPWD" || exit
+        UNSTAGED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
+        UNCOMMITTED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
+        UNTRACKED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
+        STASHES=$(cd "$PROJ_DIR"; git stash list | wc -l)
 
         # Build up the status string
         IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
