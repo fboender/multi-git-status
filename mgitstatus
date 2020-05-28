@@ -30,6 +30,7 @@ You can limit output with the following options:
   --no-uncommitted
   --no-untracked
   --no-stashes
+  --only-submodules
     
 EOF
 }
@@ -45,6 +46,7 @@ NO_UPSTREAM=0
 NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
+ONLY_SUBMODULES=0
 DEPTH=2
 
 while [ -n "$1" ]; do
@@ -88,6 +90,9 @@ while [ -n "$1" ]; do
     fi
     if [ "$1" = "--no-stashes" ]; then
         NO_STASHES=1
+    fi
+    if [ "$1" = "--only-submodules" ]; then
+        ONLY_SUBMODULES=1
     fi
     if [ "$1" = "-d" ] || [ "${1%=*}" = "--depth" ]; then
         [ "$1" = "-d" ] && DEPTH="$2" || DEPTH="${1#*=}"
@@ -152,8 +157,10 @@ for DIR in "${@:-"."}"; do
         i=$((i+1))
 
         GIT_DIR="$PROJ_DIR/.git"
+        IS_SUBMODULE=
         if [[ -f "$GIT_DIR" ]]; then 
             # This is a submodule 
+            IS_SUBMODULE="yes"
             BARE_DIR="$(cat "$PROJ_DIR/.git" | awk '{print $2}')"
             GIT_DIR="$(realpath "$PROJ_DIR/$BARE_DIR")"
         fi
@@ -201,6 +208,8 @@ for DIR in "${@:-"."}"; do
                 fi
             done
         fi
+
+        [ "$IS_SUBMODULE" != "yes" ] && [ $ONLY_SUBMODULES -eq 1 ] && continue
 
         # Find all remote branches that have been checked out and figure out if
         # they need a push or pull. We do this with various tests and put the name
