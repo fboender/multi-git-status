@@ -206,11 +206,14 @@ for DIR in "${@:-"."}"; do
         SUBMODULES=($(cd "$PROJ_DIR"; git config --file=.gitmodules --get-regexp ^^submodule.*\.path$ | cut -d " " -f 2))
         if [[ ! -z $SUBMODULES ]]; then 
             # printf ' | Submodule: %s\n' "${SUBMODULES[@]}"
+            j=0
             for submodule in "${SUBMODULES[@]}"; do
                 SUBMODULE_PATH="${PROJ_DIR%/}/${submodule}"
                 if ! containsElement "$SUBMODULE_PATH" "${PROJ_DIRS[@]}"; then
                     #echo "...appending submodule path: $SUBMODULE_PATH"
-                    PROJ_DIRS+=( "$SUBMODULE_PATH" )
+                    # PROJ_DIRS+=( "$SUBMODULE_PATH" ) # Below is the same as this, but fixes the order
+                    PROJ_DIRS=( "${PROJ_DIRS[@]:0:$(($i+$j))}" "$SUBMODULE_PATH" "${PROJ_DIRS[@]:$(($i+$j))}" )
+                    j=$(($j + 1))
                 fi
             done
         fi
