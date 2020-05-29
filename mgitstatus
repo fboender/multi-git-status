@@ -21,6 +21,7 @@ deep.
   -f             Do a 'git fetch' on each repo (slow for many repos)
   -c             Force color output (preserve colors when using pipes)
   -d, --depth=2  Scan this many directories deep
+  --info         Adds info output 
 
 You can limit output with the following options:
 
@@ -48,6 +49,7 @@ NO_UNTRACKED=0
 NO_STASHES=0
 ONLY_SUBMODULES=0
 DEPTH=2
+INFO_OUTPUT=0
 
 while [ -n "$1" ]; do
     # Stop reading when we've run out of options.
@@ -93,6 +95,9 @@ while [ -n "$1" ]; do
     fi
     if [ "$1" = "--only-submodules" ]; then
         ONLY_SUBMODULES=1
+    fi
+    if [ "$1" = "--info" ]; then
+        INFO_OUTPUT=1
     fi
     if [ "$1" = "-d" ] || [ "${1%=*}" = "--depth" ]; then
         [ "$1" = "-d" ] && DEPTH="$2" || DEPTH="${1#*=}"
@@ -148,6 +153,8 @@ for DIR in "${@:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
     readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -depth -name ".git" -type d -printf "%h\0" )
+    [ $INFO_OUTPUT -eq 1 ] && \
+        1>&2 echo "INFO: Examining ${#PROJ_DIRS[@]} git folders recursively..."
     i=0
     while :; do
         #printf ' -- PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
