@@ -147,7 +147,7 @@ containsElement () {
 for DIR in "${@:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
-    readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -type d -print0)
+    readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -depth -name ".git" -type d -printf "%h\0" )
     i=0
     while :; do
         #printf ' -- PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
