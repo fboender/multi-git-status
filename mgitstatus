@@ -148,7 +148,6 @@ for DIR in "${@:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
     readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -type d -print0)
-    [ $DEBUG -eq 1 ] && printf 'PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
     i=0
     while :; do
         #printf ' -- PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
@@ -166,17 +165,17 @@ for DIR in "${@:-"."}"; do
         fi
         GIT_CONF="$GIT_DIR/config"
 
-        # Check git config for this project to see if we should ignore this repo.
-        IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
-        if [ "$IGNORE" = "true" ]; then
-            continue
-        fi
-
         # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
         if [ ! -d "$GIT_DIR" ]; then
             if [ "$WARN_NOT_REPO" -eq 1 ] && [ "$PROJ_DIR" != "." ]; then
                 printf "${PROJ_DIR}: not a git repo\n"
             fi
+            continue
+        fi
+
+        # Check git config for this project to see if we should ignore this repo.
+        IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
+        if [ "$IGNORE" = "true" ]; then
             continue
         fi
 
