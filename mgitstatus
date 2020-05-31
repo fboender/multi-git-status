@@ -155,6 +155,7 @@ for DIR in "${@:-"."}"; do
     readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -depth -name ".git" -type d -printf "%h\0" )
     [ $INFO_OUTPUT -eq 1 ] && \
         1>&2 echo "INFO: Examining ${#PROJ_DIRS[@]} git folders recursively..."
+    PROJ_NEED_ATTENTION=0
     i=0
     while :; do
         #printf ' -- PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
@@ -311,11 +312,15 @@ for DIR in "${@:-"."}"; do
         if [ "$STATUS_NEEDS" = "" ]; then
             IS_OK=1
             STATUS_NEEDS="${STATUS_NEEDS}${C_OK}ok${C_RESET} "
+        else
+            PROJ_NEED_ATTENTION=$(($PROJ_NEED_ATTENTION + 1))
         fi
 
         # Print the output, unless repo is 'ok' and -e was specified
         if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
-            printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+            [ $INFO_OUTPUT -eq 1 ] && PFX="STATUS: " || PFX=
+            printf "${PFX}${PROJ_DIR}: $STATUS_NEEDS\n"
         fi
     done
+    [ $INFO_OUTPUT -eq 1 ] && echo "INFO: ${PROJ_NEED_ATTENTION} projects need attention."
 done
