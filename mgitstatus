@@ -36,7 +36,9 @@ You can limit output with the following options:
 EOF
 }
 
-# Handle commandline options
+# Parse command line arguments
+# ---------------------------
+# Initialize parameters
 WARN_NOT_REPO=0
 EXCLUDE_OK=0
 DO_FETCH=0
@@ -50,69 +52,92 @@ NO_STASHES=0
 ONLY_SUBMODULES=0
 DEPTH=2
 INFO_OUTPUT=0
-
-while [ -n "$1" ]; do
-    # Stop reading when we've run out of options.
-    [ "$(printf "%s" "$1" | cut -c 1)" != "-" ] && break
-
-    if [ "$1" = "--version" ]; then
-        echo "v$VERSION"
-        exit 0
-    fi
-    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-        usage
-        exit 1
-    fi
-    if [ "$1" = "-w" ]; then
-        WARN_NOT_REPO=1
-    fi
-    if [ "$1" = "-e" ]; then
-        EXCLUDE_OK=1
-    fi
-    if [ "$1" = "-f" ]; then
-        DO_FETCH=1
-    fi
-    if [ "$1" = "-c" ]; then
-        FORCE_COLOR=1
-    fi
-    if [ "$1" = "--no-push" ]; then
-        NO_PUSH=1
-    fi
-    if [ "$1" = "--no-pull" ]; then
-        NO_PULL=1
-    fi
-    if [ "$1" = "--no-upstream" ]; then
-        NO_UPSTREAM=1
-    fi
-    if [ "$1" = "--no-uncommitted" ]; then
-        NO_UNCOMMITTED=1
-    fi
-    if [ "$1" = "--no-untracked" ]; then
-        NO_UNTRACKED=1
-    fi
-    if [ "$1" = "--no-stashes" ]; then
-        NO_STASHES=1
-    fi
-    if [ "$1" = "--only-submodules" ]; then
-        ONLY_SUBMODULES=1
-    fi
-    if [ "$1" = "--info" ]; then
-        INFO_OUTPUT=1
-    fi
-    if [ "$1" = "-d" ] || [ "${1%=*}" = "--depth" ]; then
-        [ "$1" = "-d" ] && DEPTH="$2" || DEPTH="${1#*=}"
-        echo "$DEPTH" | grep -E "^[0-9]+$" > /dev/null 2>&1
-        IS_NUM="$?"
-        if [ "$IS_NUM" -ne 0 ]; then
-            echo "Invalid value for 'depth' (must be a number): $DEPTH" >&2
+# ---------------------------
+args_backup=("$@") 
+args=()
+_count=1
+while :; do
+    key="${1:-}"
+    case $key in
+        -h|-\?|--help)
+            usage    # Display a usage synopsis.
+            exit
+            ;;
+        # --------------------------------------------------------
+        --version) shift
+            echo "v$VERSION"
+            exit 0
+            ;;
+        -w) shift
+            WARN_NOT_REPO=1
+            ;;
+        -e) shift
+            EXCLUDE_OK=1
+            ;;
+        -f) shift
+            DO_FETCH=1
+            ;;
+        -c) shift
+            FORCE_COLOR=1
+            ;;
+        --no-push) shift
+            NO_PUSH=1
+            ;;
+        --no-pull) shift
+            NO_PULL=1
+            ;;
+        --no-upstream) shift
+            NO_UPSTREAM=1
+            ;;
+        --no-uncommitted) shift
+            NO_UNCOMMITTED=1
+            ;;
+        --no-untracked) shift
+            NO_UNTRACKED=1
+            ;;
+        --no-stashes) shift
+            NO_STASHES=1
+            ;;
+        --only-submodules) shift
+            ONLY_SUBMODULES=1
+            ;;
+        --info) shift
+            INFO_OUTPUT=1
+            ;;
+        -d|-d=*|--depth|--depth=*)
+            if [[ "$1" == *"="* ]]; then
+                DEPTH="${1#*=}" # remove the prefix 
+            else 
+                shift 
+                DEPTH="$1"
+            fi 
+            shift 
+            echo "$DEPTH" | grep -E "^[0-9]+$" > /dev/null 2>&1
+            IS_NUM="$?"
+            if [ "$IS_NUM" -ne 0 ]; then
+                echo "Invalid value for 'depth' (must be a number): ${DEPTH:-NULL}" >&2
+                exit 1
+            fi
+            ;;
+        # --------------------------------------------------------
+        -*) # Handle unrecognized options
+            echo
+            echo "Unknown option: $1"
+            echo
             exit 1
-        fi
-        # Shift one extra param
-        [ "$1" = "-d" ] && shift
-    fi
-
-    shift
-done
+            ;;
+        *)  # Generate the new positional arguments: $arg1, $arg2, ... and ${args[@]}
+            if [[ ! -z ${1:-} ]]; then
+                declare arg$((_count++))="$1"
+                args+=("$1")
+                shift
+            fi
+    esac
+    [[ -z ${1:-} ]] && break
+done; set -- "${args_backup[@]}"
+# Use $arg1 in place of $1, $arg2 in place of $2 and so on, 
+# "$@" is in the original state,
+# use ${args[@]} for new positional arguments  
 
 if [ -t 1 ] || [ "$FORCE_COLOR" -eq 1 ]; then
     # Our output is not being redirected, so we can use colors.
@@ -149,7 +174,7 @@ containsElement () {
 }
 
 # Go through positional arguments (DIRs) or '.' if no argumnets are given
-for DIR in "${@:-"."}"; do
+for DIR in "${args[@]:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
     readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -depth -name ".git" -type d -printf "%h\0" )
