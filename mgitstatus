@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # MIT license
 
@@ -21,6 +21,7 @@ deep.
   -f             Do a 'git fetch' on each repo (slow for many repos)
   -c             Force color output (preserve colors when using pipes)
   -d, --depth=2  Scan this many directories deep
+  --info         Adds info output 
 
 You can limit output with the following options:
 
@@ -30,11 +31,15 @@ You can limit output with the following options:
   --no-uncommitted
   --no-untracked
   --no-stashes
+  --no-stalled
+  --only-submodules
     
 EOF
 }
 
-# Handle commandline options
+# Parse command line arguments
+# ---------------------------
+# Initialize parameters
 WARN_NOT_REPO=0
 EXCLUDE_OK=0
 DO_FETCH=0
@@ -45,64 +50,99 @@ NO_UPSTREAM=0
 NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
+ONLY_SUBMODULES=0
 DEPTH=2
-
-while [ -n "$1" ]; do
-    # Stop reading when we've run out of options.
-    [ "$(printf "%s" "$1" | cut -c 1)" != "-" ] && break
-
-    if [ "$1" = "--version" ]; then
-        echo "v$VERSION"
-        exit 0
-    fi
-    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-        usage
-        exit 1
-    fi
-    if [ "$1" = "-w" ]; then
-        WARN_NOT_REPO=1
-    fi
-    if [ "$1" = "-e" ]; then
-        EXCLUDE_OK=1
-    fi
-    if [ "$1" = "-f" ]; then
-        DO_FETCH=1
-    fi
-    if [ "$1" = "-c" ]; then
-        FORCE_COLOR=1
-    fi
-    if [ "$1" = "--no-push" ]; then
-        NO_PUSH=1
-    fi
-    if [ "$1" = "--no-pull" ]; then
-        NO_PULL=1
-    fi
-    if [ "$1" = "--no-upstream" ]; then
-        NO_UPSTREAM=1
-    fi
-    if [ "$1" = "--no-uncommitted" ]; then
-        NO_UNCOMMITTED=1
-    fi
-    if [ "$1" = "--no-untracked" ]; then
-        NO_UNTRACKED=1
-    fi
-    if [ "$1" = "--no-stashes" ]; then
-        NO_STASHES=1
-    fi
-    if [ "$1" = "-d" ] || [ "$1" = "--depth" ]; then
-        DEPTH="$2"
-        echo "$DEPTH" | grep -E "^[0-9]+$" > /dev/null 2>&1
-        IS_NUM="$?"
-        if [ "$IS_NUM" -ne 0 ]; then
-            echo "Invalid value for 'depth' (must be a number): $DEPTH" >&2
+INFO_OUTPUT=0
+NO_STALLED=
+# ---------------------------
+args_backup=("$@") 
+args=()
+_count=1
+while :; do
+    key="${1:-}"
+    case $key in
+        -h|-\?|--help)
+            usage    # Display a usage synopsis.
+            exit
+            ;;
+        # --------------------------------------------------------
+        --version) shift
+            echo "v$VERSION"
+            exit 0
+            ;;
+        -w) shift
+            WARN_NOT_REPO=1
+            ;;
+        -e) shift
+            EXCLUDE_OK=1
+            ;;
+        -f) shift
+            DO_FETCH=1
+            ;;
+        -c) shift
+            FORCE_COLOR=1
+            ;;
+        --no-push) shift
+            NO_PUSH=1
+            ;;
+        --no-pull) shift
+            NO_PULL=1
+            ;;
+        --no-upstream) shift
+            NO_UPSTREAM=1
+            ;;
+        --no-uncommitted) shift
+            NO_UNCOMMITTED=1
+            ;;
+        --no-untracked) shift
+            NO_UNTRACKED=1
+            ;;
+        --no-stashes) shift
+            NO_STASHES=1
+            ;;
+        --no-stalled) shift
+            NO_STALLED=1
+            ;;
+        --only-submodules) shift
+            ONLY_SUBMODULES=1
+            ;;
+        --info) shift
+            INFO_OUTPUT=1
+            ;;
+        -d|-d=*|--depth|--depth=*)
+            if [[ "$1" == *"="* ]]; then
+                DEPTH="${1#*=}" # remove the prefix 
+            else 
+                shift 
+                DEPTH="$1"
+            fi 
+            shift 
+            echo "$DEPTH" | grep -E "^[0-9]+$" > /dev/null 2>&1
+            IS_NUM="$?"
+            if [ "$IS_NUM" -ne 0 ]; then
+                echo "Invalid value for 'depth' (must be a number): ${DEPTH:-NULL}" >&2
+                exit 1
+            fi
+            ;;
+        # --------------------------------------------------------
+        -*) # Handle unrecognized options
+            echo
+            echo "Unknown option: $1"
+            echo
             exit 1
-        fi
-        # Shift one extra param
-        shift
-    fi
-
-    shift
-done
+            ;;
+        *)  # Generate the new positional arguments: $arg1, $arg2, ... and ${args[@]}
+            if [[ ! -z ${1:-} ]]; then
+                declare arg$((_count++))="$1"
+                args+=("$1")
+                shift
+            fi
+    esac
+    [[ -z ${1:-} ]] && break
+done; set -- "${args_backup[@]}"
+# Use $arg1 in place of $1, $arg2 in place of $2 and so on, 
+# "$@" is in the original state,
+# use ${args[@]} for new positional arguments  
 
 if [ -t 1 ] || [ "$FORCE_COLOR" -eq 1 ]; then
     # Our output is not being redirected, so we can use colors.
@@ -123,6 +163,7 @@ C_NEEDS_COMMIT="$C_RED"
 C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
+C_STALLED="$C_YELLOW"
 
 # Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan in
 # infinitely deep
@@ -131,26 +172,49 @@ if [ "$DEPTH" -ne 0 ]; then
     FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
 fi
 
+containsElement () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
+
 # Go through positional arguments (DIRs) or '.' if no argumnets are given
-for DIR in "${@:-"."}"; do
+for DIR in "${args[@]:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
-    find -L "$DIR" $FIND_OPTS -type d | while read -r PROJ_DIR
-    do
+    readarray -d '' PROJ_DIRS < <(find -L "$DIR" $FIND_OPTS -depth -name ".git" -printf "%h\0" )
+    [ $INFO_OUTPUT -eq 1 ] && \
+        1>&2 echo "INFO: Examining ${#PROJ_DIRS[@]} git folders recursively..."
+    PROJ_NEED_ATTENTION=0
+    i=0
+    while :; do
+        #printf ' -- PROJ_DIRS: %s\n' "${PROJ_DIRS[@]}"
+        (("$i" >= "${#PROJ_DIRS[@]}")) && break
+        PROJ_DIR="${PROJ_DIRS[$i]}"
+        i=$((i+1))
+
         GIT_DIR="$PROJ_DIR/.git"
-        GIT_CONF="$PROJ_DIR/.git/config"
-        
-        # Check git config for this project to see if we should ignore this repo.
-        IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
-        if [ "$IGNORE" = "true" ]; then
-            continue
+        IS_SUBMODULE=
+        if [[ -f "$GIT_DIR" ]]; then 
+            # This is a submodule 
+            IS_SUBMODULE="yes"
+            BARE_DIR="$(cat "$PROJ_DIR/.git" | awk '{print $2}')"
+            GIT_DIR="$(realpath "$PROJ_DIR/$BARE_DIR")"
         fi
+        GIT_CONF="$GIT_DIR/config"
 
         # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
         if [ ! -d "$GIT_DIR" ]; then
             if [ "$WARN_NOT_REPO" -eq 1 ] && [ "$PROJ_DIR" != "." ]; then
                 printf "${PROJ_DIR}: not a git repo\n"
             fi
+            continue
+        fi
+
+        # Check git config for this project to see if we should ignore this repo.
+        IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
+        if [ "$IGNORE" = "true" ]; then
             continue
         fi
 
@@ -164,11 +228,29 @@ for DIR in "${@:-"."}"; do
 
         # Do a 'git fetch' if requested
         if [ "$DO_FETCH" -eq 1 ]; then
-            git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" fetch -q >/dev/null
+            git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" fetch -q >/dev/null
         fi
 
         # Refresh the index, or we might get wrong results.
-        git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
+        git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
+
+        # Now we know we are dealing with a git repo. Find out its submodules:
+        SUBMODULES=($(cd "$PROJ_DIR"; git config --file=.gitmodules --get-regexp ^^submodule.*\.path$ | cut -d " " -f 2))
+        if [[ ! -z $SUBMODULES ]]; then 
+            #printf ' | Submodule: %s\n' "${SUBMODULES[@]}"
+            j=0
+            for submodule in "${SUBMODULES[@]}"; do
+                SUBMODULE_PATH="${PROJ_DIR%/}/${submodule}"
+                if ! containsElement "$SUBMODULE_PATH" "${PROJ_DIRS[@]}"; then
+                    #echo "...appending submodule path: $SUBMODULE_PATH"
+                    #PROJ_DIRS+=( "$SUBMODULE_PATH" ) # Below is the same as this, but fixes the order
+                    PROJ_DIRS=( "${PROJ_DIRS[@]:0:$(($i+$j))}" "$SUBMODULE_PATH" "${PROJ_DIRS[@]:$(($i+$j))}" )
+                    j=$(($j + 1))
+                fi
+            done
+        fi
+
+        [ "$IS_SUBMODULE" != "yes" ] && [ $ONLY_SUBMODULES -eq 1 ] && continue
 
         # Find all remote branches that have been checked out and figure out if
         # they need a push or pull. We do this with various tests and put the name
@@ -231,14 +313,15 @@ for DIR in "${@:-"."}"; do
         NEEDS_PULL_BRANCHES=$(printf "$NEEDS_PULL_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
         NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
-        # Find out if there are unstaged, uncommitted or untracked changes
-        UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
-        UNCOMMITTED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
-        UNTRACKED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
-        cd "$(dirname "$GIT_DIR")" || exit
-        STASHES=$(git stash list | wc -l)
-        cd "$OLDPWD" || exit
+        BNAME=$(cd "$PROJ_DIR"; git rev-parse --abbrev-ref HEAD)
 
+        # Find out if there are unstaged, uncommitted or untracked changes
+        UNSTAGED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
+        UNCOMMITTED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
+        UNTRACKED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
+        STASHES=$(cd "$PROJ_DIR"; git stash list | wc -l)
+        STALLED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" branch --no-merged | xargs | sed -e 's/ /,/g')
+    
         # Build up the status string
         IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
         STATUS_NEEDS=""
@@ -260,14 +343,32 @@ for DIR in "${@:-"."}"; do
         if [ "$STASHES" -ne 0 ] && [ "$NO_STASHES" -eq 0 ]; then
             STATUS_NEEDS="${STATUS_NEEDS}${C_STASHES}$STASHES stashes${C_RESET} "
         fi
+        STALLED_COUNT=$(echo $STALLED | tr ',' ' ' | wc -w)
+        if [ "$STALLED_COUNT" -ne 0 ] && [[ "$BNAME" != "HEAD" ]] && [ -z "$NO_STALLED" ]; then
+            STATUS_NEEDS="${STATUS_NEEDS}${C_STALLED}${STALLED_COUNT} stalled ($STALLED)${C_RESET} "
+            ## dump the commit logs which only the other branches have
+            #for b in `git branch | grep -v "*"`; do 
+            #    git log --cherry-pick --oneline --no-merges --left-only ${b}...${BNAME}
+            #done
+        fi
         if [ "$STATUS_NEEDS" = "" ]; then
             IS_OK=1
             STATUS_NEEDS="${STATUS_NEEDS}${C_OK}ok${C_RESET} "
+        else
+            PROJ_NEED_ATTENTION=$(($PROJ_NEED_ATTENTION + 1))
         fi
 
+        
         # Print the output, unless repo is 'ok' and -e was specified
+        PFX=
+        BRANCH_INFO=
         if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
-            printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+            if [ $INFO_OUTPUT -eq 1 ]; then 
+                PFX="STATUS: "
+                BRANCH_INFO=" ${C_CYAN}@$BNAME${C_RESET}:"
+            fi
+            printf "${PFX}${PROJ_DIR}:${BRANCH_INFO} $STATUS_NEEDS\n"
         fi
     done
+    [ $INFO_OUTPUT -eq 1 ] && echo "INFO: Projects require attention: ${PROJ_NEED_ATTENTION}"
 done
