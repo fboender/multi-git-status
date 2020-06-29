@@ -76,7 +76,7 @@ mgitstatus requires a POSIX compliant shell. Bash will do fine.
 The following steps will install mgitstatus:
 
     # Clone the repo
-    $ git clone git@github.com:fboender/multi-git-status.git
+    $ git clone https://github.com/fboender/multi-git-status.git
     $ cd multi-git-status
 
     # Install globally (all users)
