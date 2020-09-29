@@ -1,7 +1,7 @@
 mgitstatus
 ==========
 
-Show uncommited, untracked and unpushed changes in multiple Git
+Show uncommitted, untracked and unpushed changes in multiple Git
 repositories.  Scan for .git dirs up to **DEPTH** directories deep.
 The default is 2.  If **DEPTH** is 0, the scan is infinitely deep.
 
@@ -35,7 +35,7 @@ for that repo to `true`. (See "usage" below for an example).
 
     Usage: ./mgitstatus [--version] [-w] [-e] [-f] [--no-X] [-d/--depth=2] [DIR [DIR]...]
 
-    mgitstatus shows uncommited, untracked and unpushed changes in multiple Git
+    mgitstatus shows uncommitted, untracked and unpushed changes in multiple Git
     repositories.  By default, mgitstatus scans two directories deep. This can be
     changed with the -d (--depth) option.  If DEPTH is 0, the scan is infinitely
     deep.
