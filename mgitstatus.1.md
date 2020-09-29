@@ -4,7 +4,7 @@
 
 # NAME
 
-mgitstatus – Show uncommitted, untracked and unpushed changes for multiple Git repos.
+mgitstatus - Show uncommitted, untracked and unpushed changes for multiple Git repos.
 
 # SYNOPSIS
 
