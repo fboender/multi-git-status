@@ -4,11 +4,11 @@
 
 # NAME
 
-mgitstatus – Show uncommitted, untracked and unpushed changes for multiple Git repos.
+mgitstatus - Show uncommitted, untracked and unpushed changes for multiple Git repos.
 
 # SYNOPSIS
 
- **mgitstatus** [**--version**] [**-w**] [**-e**] [**-f**] [**--no-X**] [**-d/--depth**=2] [**DIR** [**DIR**]...]
+ **mgitstatus** [**\--version**] [**-w**] [**-e**] [**-f**] [**\--no-X**] [**-d/\--depth**=2] [**DIR** [**DIR**]...]
 
 # DESCRIPTION
 
@@ -43,7 +43,7 @@ mgitstatus makes no guarantees that all states are taken into account.
 
 # OPTIONS
 
-**--version**
+**\--version**
 :   Show version
 
 **-w**
@@ -58,27 +58,27 @@ mgitstatus makes no guarantees that all states are taken into account.
 **-c**
 :   Force color output (preserve colors when using pipes)
 
-**-d, --depth=2**
+**-d, \--depth=2**
 :   Scan this many directories deep. Default is 2. If **0**, the scan is infinitely deep
 
 You can limit output with the following options:
 
-**--no-push**
+**\--no-push**
 :   Do not show branches that need a push.
 
-**--no-pull**
+**\--no-pull**
 :   Do not show branches that need a pull.
 
-**--no-upstream**
+**\--no-upstream**
 :   Do not show branches that need an upstream.
 
-**--no-uncommitted**
+**\--no-uncommitted**
 :   Do not show branches that have unstaged or uncommitted changes.
 
-**--no-untracked**
+**\--no-untracked**
 :   Do not show branches that have untracked files.
 
-**--no-stashes**
+**\--no-stashes**
 :   Do now show stashes
 
 
