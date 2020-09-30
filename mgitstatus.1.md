@@ -12,7 +12,7 @@ mgitstatus - Show uncommitted, untracked and unpushed changes for multiple Git r
 
 # DESCRIPTION
 
-**mgitstatus** shows uncommited, untracked and unpushed changes in multiple
+**mgitstatus** shows uncommitted, untracked and unpushed changes in multiple
 Git repositories.  By default, **mgitstatus** scans two directories deep. This
 can be changed with the `-d` (`--depth`) option.  If **DEPTH** is 0, the scan
 is infinitely deep.
