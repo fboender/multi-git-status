@@ -81,6 +81,8 @@ You can limit output with the following options:
 **\--no-stashes**
 :   Do now show stashes
 
+**--no-branch**
+:   Do now show current branch
 
 # EXAMPLES
 
