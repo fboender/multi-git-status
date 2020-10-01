@@ -87,10 +87,10 @@ You can limit output with the following options:
 The following command scans two directories deep for Git projects and shows
 their status:
 
-    $ mgitstatus 
-    ./fboender/sla: ok 
+    $ mgitstatus
+    ./fboender/sla: ok
     ./fboender/multi-git-status: Needs push (master) Untracked files
-    ./other/peewee: ok 
+    ./other/peewee: ok
 
 To scan deeper (three dirs instead of two) in the current dir:
 
