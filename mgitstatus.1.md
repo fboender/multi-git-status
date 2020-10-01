@@ -19,6 +19,8 @@ is infinitely deep.
 
 mgitstatus shows:
 
+- **Current branch** if the -b option is given. Skips 'master' branch.
+
 - **Uncommitted changes** if there are unstaged or uncommitted changes on the
   checked out branch.
 
@@ -45,6 +47,9 @@ mgitstatus makes no guarantees that all states are taken into account.
 
 **\--version**
 :   Show version
+
+**-b**
+:   Print current branch
 
 **-w**
 :   Warn about dirs that are not Git repositories

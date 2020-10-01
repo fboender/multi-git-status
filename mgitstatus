@@ -8,7 +8,7 @@ DEBUG=0
 usage () {
     cat << EOF >&2
     
-Usage: $0 [--version] [-w] [-e] [-f] [--no-X] [-d/--depth=2] [DIR [DIR]...]
+Usage: $0 [--version] [-b] [-w] [-e] [-f] [--no-X] [-d/--depth=2] [DIR [DIR]...]
 
 mgitstatus shows uncommitted, untracked and unpushed changes in multiple Git
 repositories.  By default, mgitstatus scans two directories deep. This can be
@@ -20,6 +20,7 @@ deep.
   -e             Exclude repos that are 'ok'
   -f             Do a 'git fetch' on each repo (slow for many repos)
   -c             Force color output (preserve colors when using pipes)
+  -b             Show current branch
   -d, --depth=2  Scan this many directories deep
 
 You can limit output with the following options:
@@ -45,6 +46,7 @@ NO_UPSTREAM=0
 NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
+DO_STATUS=0
 DEPTH=2
 
 while [ -n "$1" ]; do
@@ -70,6 +72,9 @@ while [ -n "$1" ]; do
     fi
     if [ "$1" = "-c" ]; then
         FORCE_COLOR=1
+    fi
+    if [ "$1" = "-b" ]; then
+        DO_STATUS=1
     fi
     if [ "$1" = "--no-push" ]; then
         NO_PUSH=1
@@ -239,9 +244,15 @@ for DIR in "${@:-"."}"; do
         STASHES=$(git stash list | wc -l)
         cd "$OLDPWD" || exit
 
+        CURRENT_BRANCH=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR"  branch --show-current)
+
         # Build up the status string
         IS_OK=0  # 0 = Repo needs something, 1 = Repo needs nothing ('ok')
         STATUS_NEEDS=""
+        BRANCH_PRINT=""
+        if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "master" ] && [ "$DO_STATUS" -eq 1 ]; then
+            BRANCH_PRINT="[${C_OK}${CURRENT_BRANCH}${C_RESET}] "
+        fi
         if [ -n "$NEEDS_PUSH_BRANCHES" ] && [ "$NO_PUSH" -eq 0 ]; then
             STATUS_NEEDS="${STATUS_NEEDS}${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET} "
         fi
@@ -262,7 +273,9 @@ for DIR in "${@:-"."}"; do
         fi
         if [ "$STATUS_NEEDS" = "" ]; then
             IS_OK=1
-            STATUS_NEEDS="${STATUS_NEEDS}${C_OK}ok${C_RESET} "
+            STATUS_NEEDS="${BRANCH_PRINT}${STATUS_NEEDS}${C_OK}ok${C_RESET} "
+        else
+            STATUS_NEEDS="${BRANCH_PRINT}${STATUS_NEEDS}"
         fi
 
         # Print the output, unless repo is 'ok' and -e was specified

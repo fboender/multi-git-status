@@ -8,7 +8,7 @@ mgitstatus \[en] Show uncommitted, untracked and unpushed changes for
 multiple Git repos.
 .SH SYNOPSIS
 .PP
-\f[B]mgitstatus\f[] [\f[B]\-\-version\f[]] [\f[B]\-w\f[]] [\f[B]\-e\f[]]
+\f[B]mgitstatus\f[] [\f[B]\-\-version\f[]] [\f[B]\-b\f[]] [\f[B]\-w\f[]] [\f[B]\-e\f[]]
 [\f[B]\-f\f[]] [\f[B]\-\-no\-X\f[]] [\f[B]\-d/\-\-depth\f[]=2]
 [\f[B]DIR\f[] [\f[B]DIR\f[]]...]
 .SH DESCRIPTION
@@ -20,6 +20,8 @@ This can be changed with the \f[C]\-d\f[] (\f[C]\-\-depth\f[]) option.
 If \f[B]DEPTH\f[] is 0, the scan is infinitely deep.
 .PP
 mgitstatus shows:
+.IP \[bu] 2
+\f[B]Current branch\f[] if the option -b is given.
 .IP \[bu] 2
 \f[B]Uncommitted changes\f[] if there are unstaged or uncommitted
 changes on the checked out branch.
@@ -49,6 +51,11 @@ mgitstatus makes no guarantees that all states are taken into account.
 .TP
 .B \f[B]\-\-version\f[]
 Show version
+.RS
+.RE
+.TP
+.B \f[B]\-b\f[]
+Print current branch (master is skipped)
 .RS
 .RE
 .TP
