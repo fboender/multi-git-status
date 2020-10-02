@@ -1,4 +1,3 @@
-MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/sh
 
 PREFIX ?= /usr/local
