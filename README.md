@@ -71,7 +71,7 @@ For more examples, see the [manual page](mgitstatus.1.md).
 
 # Installation
 
-mgitstatus requires a POSIX compliant shell. Bash will do fine.
+mgitstatus requires make.
 
 The following steps will install mgitstatus:
 
@@ -80,10 +80,10 @@ The following steps will install mgitstatus:
     $ cd multi-git-status
 
     # Install globally (all users)
-    $ sudo ./install.sh
+    $ sudo make install
 
     # Install locally (only your user)
-    $ PREFIX=~/.local ./install.sh
+    $ PREFIX=~/.local make install
 
 # License
 
