@@ -74,13 +74,16 @@ For more examples, see the [manual page](mgitstatus.1.md).
 
 # Installation
 
-mgitstatus requires make.
+mgitstatus requires make and pandoc.
 
 The following steps will install mgitstatus:
 
     # Clone the repo
     $ git clone https://github.com/fboender/multi-git-status.git
     $ cd multi-git-status
+
+    # Build manpage
+    $ make
 
     # Install globally (all users)
     $ sudo make install
