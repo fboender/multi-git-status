@@ -1,5 +1,4 @@
 #!/bin/bash
-
 dump(){
     echo "expected:"
     echo "${1}"
@@ -7,28 +6,32 @@ dump(){
     echo "${2}"
 }
 
-TESTS_DIR="./tests"
+check(){
+    local got="$1"
+    local expected="$2"
+    if [[ "$got" != "$expected" ]]; then
+        echo "FAILED in $(basename $test):" 
+        echo "-> Expected: "
+        echo "$expected"
+        echo "-> Got:"
+        echo "$got"
+        return 1
+    else
+        return 0
+    fi
+   
+}
+
+cwd=$PWD
+TESTS_DIR="$cwd/tests/__tmp__"
 rm -rf "$TESTS_DIR" 2> /dev/null
-mkdir -p "$TESTS_DIR/a/b"
-(
-cd "$TESTS_DIR"; git init foo > /dev/null
-cd a; git init bar > /dev/null
-cd b; git init baz > /dev/null
-)
-
-res=$(./mgitstatus --depth=0 "$TESTS_DIR")
-#echo "$res"
-
-# Test 1
-expected=$(cat << EOF
-./tests/a/b/baz: Repo has no commits yet
-./tests/a/bar: Repo has no commits yet
-./tests/foo: Repo has no commits yet
-EOF
-)
-
-[[ "$res" = "$expected" ]] \
-    && echo "Test 1: 'Repo has no commits yet' passed" \
-    || { echo "Test 1: failed."; dump "$expected" "$res"; }
-
-echo "All tests are passed."
+bin="$PWD/mgitstatus"
+export bin
+export TESTS_DIR
+for test in $cwd/tests/*; do
+    mkdir "$TESTS_DIR"
+    cd "$TESTS_DIR"
+    . $test
+    echo "Passed: $(basename $test)"
+    rm -rf "$TESTS_DIR" 2> /dev/null
+done
