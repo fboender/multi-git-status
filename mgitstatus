@@ -28,12 +28,13 @@ You can limit output with the following options:
   --no-push
   --no-pull
   --no-upstream
+  --no-unnecessary-upstream     Don't print if that branch has no unique commits to send
   --no-uncommitted
   --no-untracked
   --no-stashes
   --no-stalled
   --only-submodules
-    
+
 EOF
 }
 
@@ -54,6 +55,7 @@ ONLY_SUBMODULES=0
 DEPTH=2
 INFO_OUTPUT=0
 NO_STALLED=
+NO_UNNECESSARY_UPSTREAM=0
 # ---------------------------
 args_backup=("$@") 
 args=()
@@ -90,6 +92,9 @@ while :; do
             ;;
         --no-upstream) shift
             NO_UPSTREAM=1
+            ;;
+        --no-unnecessary-upstream) shift 
+            NO_UNNECESSARY_UPSTREAM=1
             ;;
         --no-uncommitted) shift
             NO_UNCOMMITTED=1
@@ -253,6 +258,13 @@ for DIR in "${args[@]:-"."}"; do
 
         [ "$IS_SUBMODULE" != "yes" ] && [ $ONLY_SUBMODULES -eq 1 ] && continue
 
+        BNAME=$(cd "$PROJ_DIR"; git rev-parse --abbrev-ref HEAD 2> /dev/null)
+        if [[ $? -gt 0 ]]; then
+            printf "${PFX}${PROJ_DIR}: ${C_NO_COMMITS_YET}Repo has no commits yet${C_RESET}\n"
+            PROJ_NEED_ATTENTION=$(($PROJ_NEED_ATTENTION + 1))
+            continue
+        fi
+
         # Find all remote branches that have been checked out and figure out if
         # they need a push or pull. We do this with various tests and put the name
         # of the branches in NEEDS_XXXX, seperated by newlines. After we're done,
@@ -305,7 +317,8 @@ for DIR in "${args[@]:-"."}"; do
                 fi
             else
                 # Branch does not have an upstream (local/remote branch).
-                NEEDS_UPSTREAM_BRANCHES="${NEEDS_UPSTREAM_BRANCHES}\n$REF_HEAD"
+                [[ $NO_UNNECESSARY_UPSTREAM -eq 0 || "$BNAME" == "$REF_HEAD" ]] && \
+                    NEEDS_UPSTREAM_BRANCHES="${NEEDS_UPSTREAM_BRANCHES}\n$REF_HEAD"
             fi
         done
 
@@ -313,13 +326,6 @@ for DIR in "${args[@]:-"."}"; do
         NEEDS_PUSH_BRANCHES=$(printf "$NEEDS_PUSH_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
         NEEDS_PULL_BRANCHES=$(printf "$NEEDS_PULL_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
         NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
-
-        BNAME=$(cd "$PROJ_DIR"; git rev-parse --abbrev-ref HEAD 2> /dev/null)
-        if [[ $? -gt 0 ]]; then
-            printf "${PFX}${PROJ_DIR}: ${C_NO_COMMITS_YET}Repo has no commits yet${C_RESET}\n"
-            PROJ_NEED_ATTENTION=$(($PROJ_NEED_ATTENTION + 1))
-            continue
-        fi
 
         # Find out if there are unstaged, uncommitted or untracked changes
         UNSTAGED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
