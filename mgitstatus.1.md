@@ -38,6 +38,8 @@ mgitstatus shows:
 
 - **X stashes** if there are stashes.
 
+- **X stalled (BRANCH)** if there other branches are ahead of current branch.
+
 Since there are a lot of different states a git repository can be in,
 mgitstatus makes no guarantees that all states are taken into account.
 
