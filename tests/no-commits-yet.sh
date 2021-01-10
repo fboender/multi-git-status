@@ -12,4 +12,4 @@ check "`$bin --depth=0 .`" "`cat << EOL
 ./a/bar: Repo has no commits yet
 ./foo: Repo has no commits yet
 EOL
-`" || break
+`"
