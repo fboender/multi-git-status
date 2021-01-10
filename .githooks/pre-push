@@ -1,0 +1,19 @@
+#!/bin/bash
+# How to distribute hooks along with the project: https://stackoverflow.com/a/65648704/1952991
+
+checklist="push-checklist"
+timeout=60 # seconds 
+if [[ -f "$checklist" ]]; then
+    last_test="$(head -n 1 $checklist)"
+    age=$((`date +"%s"` - `date --date="$last_test" +"%s"`))
+    if [[ $age -lt $timeout ]]; then
+        echo "Checklist was up to date."
+        exit 0
+    fi
+fi
+echo "Checklist is timed out. Please run appropriate tests and run:"
+echo
+echo "    make tested"
+echo 
+exit 1
+
