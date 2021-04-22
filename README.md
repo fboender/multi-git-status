@@ -33,7 +33,7 @@ for that repo to `true`. (See "usage" below for an example).
 
 # Usage
 
-    Usage: ./mgitstatus [--version] [-w] [-e] [-f] [--no-X] [-d/--depth=2] [DIR [DIR]...]
+    Usage: ./mgitstatus [--version] [-w] [-e] [-f] [-s] [--no-X] [-d/--depth=2] [DIR [DIR]...]
 
     mgitstatus shows uncommitted, untracked and unpushed changes in multiple Git
     repositories.  By default, mgitstatus scans two directories deep. This can be
@@ -44,6 +44,7 @@ for that repo to `true`. (See "usage" below for an example).
       -w             Warn about dirs that are not Git repositories
       -e             Exclude repos that are 'ok'
       -f             Do a 'git fetch' on each repo (slow for many repos)
+      -s             Sort dirs alphabetically
       -c             Force color output (preserve colors when using pipes)
       -d, --depth=2  Scan this many directories deep
 

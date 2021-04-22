@@ -9,7 +9,7 @@ multiple Git repos.
 .SH SYNOPSIS
 .PP
 \f[B]mgitstatus\f[R] [\f[B]\-\-version\f[R]] [\f[B]\-w\f[R]]
-[\f[B]\-e\f[R]] [\f[B]\-f\f[R]] [\f[B]\-\-no\-X\f[R]]
+[\f[B]\-e\f[R]] [\f[B]\-f\f[R]] [\f[B]\-s\f[R]] [\f[B]\-\-no\-X\f[R]]
 [\f[B]\-d/\-\-depth\f[R]=2] [\f[B]DIR\f[R] [\f[B]DIR\f[R]]\&...]
 .SH DESCRIPTION
 .PP
@@ -58,6 +58,9 @@ Exclude repos that are `ok'
 .TP
 .B \f[B]\-f\f[R]
 Do a `git fetch' on each repo (slow for many repos)
+.TP
+.B \f[B]\-s\f[R]
+Sort dirs alphabetically
 .TP
 .B \f[B]\-c\f[R]
 Force color output (preserve colors when using pipes)
