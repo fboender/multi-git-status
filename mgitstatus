@@ -128,6 +128,7 @@ C_NEEDS_COMMIT="$C_RED"
 C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
+C_NOT_REPO="$C_CYAN"
 
 # Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan in
 # infinitely deep
@@ -154,7 +155,7 @@ for DIR in "${@:-"."}"; do
         # If this dir is not a repo, and WARN_NOT_REPO is 1, tell the user.
         if [ ! -d "$GIT_DIR" ]; then
             if [ "$WARN_NOT_REPO" -eq 1 ] && [ "$PROJ_DIR" != "." ]; then
-                printf "${PROJ_DIR}: not a git repo\n"
+                printf "${PROJ_DIR}: ${C_NOT_REPO}Not a git repo${C_RESET}\n"
             fi
             continue
         fi
