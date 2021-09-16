@@ -9,8 +9,9 @@ multiple Git repos.
 .SH SYNOPSIS
 .PP
 \f[B]mgitstatus\f[R] [\f[B]\-\-version\f[R]] [\f[B]\-w\f[R]]
-[\f[B]\-e\f[R]] [\f[B]\-f\f[R]] [\f[B]\-\-no\-X\f[R]]
-[\f[B]\-d/\-\-depth\f[R]=2] [\f[B]DIR\f[R] [\f[B]DIR\f[R]]\&...]
+[\f[B]\-e\f[R]] [\f[B]\-f\f[R]] [\f[B]\-\-throttle\f[R] SEC]
+[\f[B]\-\-no\-X\f[R]] [\f[B]\-d/\-\-depth\f[R]=2] [\f[B]DIR\f[R]
+[\f[B]DIR\f[R]]\&...]
 .SH DESCRIPTION
 .PP
 \f[B]mgitstatus\f[R] shows uncommitted, untracked and unpushed changes
@@ -58,6 +59,9 @@ Exclude repos that are `ok'
 .TP
 .B \f[B]\-f\f[R]
 Do a `git fetch' on each repo (slow for many repos)
+.TP
+.B \f[B]\-\-throttle SEC\f[R]
+Wait SEC seconds between each `git fetch' (\-f option)
 .TP
 .B \f[B]\-c\f[R]
 Force color output (preserve colors when using pipes)
