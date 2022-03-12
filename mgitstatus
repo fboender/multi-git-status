@@ -32,6 +32,7 @@ You can limit output with the following options:
   --no-uncommitted
   --no-untracked
   --no-stashes
+  --no-ok          (same as -e)
     
 EOF
 }
@@ -95,6 +96,10 @@ while [ -n "$1" ]; do
     fi
     if [ "$1" = "--no-stashes" ]; then
         NO_STASHES=1
+    fi
+    if [ "$1" = "--no-ok" ]; then
+        # Same as -e, but -e violates the principle of least astonishment.
+        EXCLUDE_OK=1
     fi
     if [ "$1" = "--throttle" ]; then
         THROTTLE="$2"

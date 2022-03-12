@@ -87,6 +87,9 @@ You can limit output with the following options:
 **\--no-stashes**
 :   Do now show stashes
 
+**\--no-ok**
+:   Do now show repos that are 'ok' (same as -e)
+
 
 # EXAMPLES
 

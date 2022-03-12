@@ -57,6 +57,7 @@ for that repo to `true`. (See "usage" below for an example).
       --no-uncommitted
       --no-untracked
       --no-stashes
+      --no-ok          (same as -e)
 
 The following example scans all directories under the current dir, with a
 depth of 2. That means the current dir and all directories directly under it.
