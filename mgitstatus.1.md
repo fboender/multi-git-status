@@ -113,6 +113,37 @@ that repo to `true`. E.g.:
     $ cd stupidrepo
     $ git config --local mgitstatus.ignore true
 
+Sort output by repo name while retaining colors:
+
+    $ mgitstatus -c | sort
+    ./ansible: ok
+    ./ansible-cmdb: Needs push (master) Uncommitted changes Untracked files
+    ./davis: ok
+    ./espy: Uncommitted changes Untracked files
+    ./garner: Untracked files
+    ./garner-chains: ok
+    ./mdpreview: ok
+
+Sort output by repo status while retaining colors:
+
+    $ mgitstatus -c --flatten -e | sort -k2
+    ./fboender/ansible-cmdb: Uncommitted changes
+    ./fboender/espy: Uncommitted changes
+    ./fboender/multi-git-status: Uncommitted changes
+    ./fboender/ansible-cmdb: Needs push (master)
+    ./fboender/ansible-cmdb: Untracked files
+    ./fboender/espy: Untracked files
+    ./fboender/garner: Untracked files
+    ./fboender/multi-git-status: Untracked files
+
+Force color output and flatten the output so we can grep for things:
+
+    $ mgitstatus --flatten -c | grep Uncommitted
+    ./fboender/multi-git-status: Uncommitted changes
+    ./fboender/ansible-cmdb: Uncommitted changes
+    ./fboender/espy: Uncommitted changes
+
+
 # COPYRIGHT
 
 Copyright 2016-2020, Ferry Boender.

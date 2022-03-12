@@ -137,6 +137,48 @@ $ cd stupidrepo
 $ git config \-\-local mgitstatus.ignore true
 \f[R]
 .fi
+.PP
+Sort output by repo name while retaining colors:
+.IP
+.nf
+\f[C]
+$ mgitstatus \-c | sort
+\&./ansible: ok
+\&./ansible\-cmdb: Needs push (master) Uncommitted changes Untracked files
+\&./davis: ok
+\&./espy: Uncommitted changes Untracked files
+\&./garner: Untracked files
+\&./garner\-chains: ok
+\&./mdpreview: ok
+\f[R]
+.fi
+.PP
+Sort output by repo status while retaining colors:
+.IP
+.nf
+\f[C]
+$ mgitstatus \-c \-\-flatten \-e | sort \-k2
+\&./fboender/ansible\-cmdb: Uncommitted changes
+\&./fboender/espy: Uncommitted changes
+\&./fboender/multi\-git\-status: Uncommitted changes
+\&./fboender/ansible\-cmdb: Needs push (master)
+\&./fboender/ansible\-cmdb: Untracked files
+\&./fboender/espy: Untracked files
+\&./fboender/garner: Untracked files
+\&./fboender/multi\-git\-status: Untracked files
+\f[R]
+.fi
+.PP
+Force color output and flatten the output so we can grep for things:
+.IP
+.nf
+\f[C]
+$ mgitstatus \-\-flatten \-c | grep Uncommitted
+\&./fboender/multi\-git\-status: Uncommitted changes
+\&./fboender/ansible\-cmdb: Uncommitted changes
+\&./fboender/espy: Uncommitted changes
+\f[R]
+.fi
 .SH COPYRIGHT
 .PP
 Copyright 2016\-2020, Ferry Boender.
