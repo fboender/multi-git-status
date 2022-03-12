@@ -10,8 +10,8 @@ multiple Git repos.
 .PP
 \f[B]mgitstatus\f[R] [\f[B]\-\-version\f[R]] [\f[B]\-w\f[R]]
 [\f[B]\-e\f[R]] [\f[B]\-f\f[R]] [\f[B]\-\-throttle\f[R] SEC]
-[\f[B]\-\-no\-X\f[R]] [\f[B]\-d/\-\-depth\f[R]=2] [\f[B]DIR\f[R]
-[\f[B]DIR\f[R]]\&...]
+[\f[B]\-c\f[R]] [\f[B]\-d/\-\-depth\f[R]=2] [\f[B]\-\-flatten\f[R]]
+[\f[B]\-\-no\-X\f[R]] [\f[B]DIR\f[R] [\f[B]DIR\f[R]]\&...]
 .SH DESCRIPTION
 .PP
 \f[B]mgitstatus\f[R] shows uncommitted, untracked and unpushed changes
@@ -70,6 +70,11 @@ Force color output (preserve colors when using pipes)
 Scan this many directories deep.
 Default is 2.
 If \f[B]0\f[R], the scan is infinitely deep
+.TP
+.B \f[B]\-\-flatten\f[R]
+Flatten output by only showing one status per line.
+If a repo has multiple statuses, multiple lines are shown for that repo.
+This aids in grepability.
 .PP
 You can limit output with the following options:
 .TP
