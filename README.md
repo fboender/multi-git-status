@@ -36,7 +36,7 @@ for that repo to `true`. (See "usage" below for an example).
     Usage: ./mgitstatus [--version] [-w] [-e] [-f] [--no-X] [-d/--depth=2] [DIR [DIR]...]
 
     mgitstatus shows uncommitted, untracked and unpushed changes in multiple Git
-    repositories.  By default, mgitstatus scans two directories deep. This can be
+    repositories. By default, mgitstatus scans two directories deep. This can be
     changed with the -d (--depth) option.  If DEPTH is 0, the scan is infinitely
     deep.
 
@@ -59,13 +59,13 @@ for that repo to `true`. (See "usage" below for an example).
 The following example scans all directories under the current dir, with a
 depth of 2. That means the current dir and all directories directly under it.
 
-    ~/Projects/fboender $ mgitstatus 
-    ./mgitstatus: ok 
-    ./mdpreview: ok 
-    ./snippets: ok 
-    ./boxes: ok 
-    ./ansible-cmdb: Uncommitted changes Untracked files 
-    ./scriptform: Uncommitted changes 
+    ~/Projects/fboender $ mgitstatus
+    ./mgitstatus: ok
+    ./mdpreview: ok
+    ./snippets: ok
+    ./boxes: ok
+    ./ansible-cmdb: Uncommitted changes Untracked files
+    ./scriptform: Uncommitted changes
 
 For more examples, see the [manual page](mgitstatus.1.md).
 

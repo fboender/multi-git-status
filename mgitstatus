@@ -11,7 +11,7 @@ usage () {
 Usage: $0 [--version] [-w] [-e] [-f] [--throttle SEC] [--no-X] [-d/--depth=2] [DIR [DIR]...]
 
 mgitstatus shows uncommitted, untracked and unpushed changes in multiple Git
-repositories.  By default, mgitstatus scans two directories deep. This can be
+repositories. By default, mgitstatus scans two directories deep. This can be
 changed with the -d (--depth) option.  If DEPTH is 0, the scan is infinitely
 deep.
 
@@ -138,7 +138,7 @@ C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
 
-# Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan in
+# Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan is
 # infinitely deep
 FIND_OPTS=""
 if [ "$DEPTH" -ne 0 ]; then
@@ -244,7 +244,7 @@ for DIR in "${@:-"."}"; do
         NEEDS_PUSH_BRANCHES=$(printf "$NEEDS_PUSH_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
         NEEDS_PULL_BRANCHES=$(printf "$NEEDS_PULL_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
         NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
-
+        
         # Find out if there are unstaged, uncommitted or untracked changes
         UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
         UNCOMMITTED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
