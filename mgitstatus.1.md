@@ -1,6 +1,6 @@
 % MGITSTATUS(1)
 % Ferry Boender
-% Jul 2019
+% Mar 2022
 
 # NAME
 
@@ -146,6 +146,6 @@ Force color output and flatten the output so we can grep for things:
 
 # COPYRIGHT
 
-Copyright 2016-2020, Ferry Boender.
+Copyright 2016-2022, Ferry Boender (et al).
 
 Licensed under the MIT license. For more information, see the LICENSE.txt file.

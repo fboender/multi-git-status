@@ -89,4 +89,6 @@ The following steps will install mgitstatus:
 
 # License
 
-mgitstatus is released under the MIT license.
+Copyright 2016-2022, Ferry Boender (et al).
+
+Licensed under the MIT license. For more information, see the LICENSE.txt file.
