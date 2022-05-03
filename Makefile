@@ -21,5 +21,5 @@ test:
 install:
 		install -d $(DESTDIR)$(PREFIX)/bin
 		install -d $(DESTDIR)$(PREFIX)/man/man1
-		install mgitstatus -m 755 $(DESTDIR)$(PREFIX)/bin/
+		install -m 755 mgitstatus $(DESTDIR)$(PREFIX)/bin/
 		install mgitstatus.1 $(DESTDIR)$(PREFIX)/man/man1/
