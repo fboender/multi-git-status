@@ -15,7 +15,8 @@ man: mgitstatus.1
 test:
 		# SC1117 Backslash is literal in...
 		# SC2059 Don't use variables in the printf format string. But we need to or colors won't work
-		shellcheck -e SC1117,SC2059 mgitstatus
+		# SC2012 Use find instead of ls, but we need to extract the user id of the .git dir
+		shellcheck -e SC1117,SC2059,SC2012 mgitstatus
 
 .PHONY: install
 install:

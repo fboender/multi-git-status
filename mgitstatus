@@ -147,6 +147,10 @@ C_NEEDS_COMMIT="$C_RED"
 C_NEEDS_UPSTREAM="$C_PURPLE"
 C_UNTRACKED="$C_CYAN"
 C_STASHES="$C_YELLOW"
+C_UNSAFE="$C_PURPLE"
+
+# Get current username so we can check .git dir ownership.
+ID="$(id -n -u)"
 
 # Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan is
 # infinitely deep
@@ -164,6 +168,15 @@ for DIR in "${@:-"."}"; do
         GIT_DIR="$PROJ_DIR/.git"
         GIT_CONF="$PROJ_DIR/.git/config"
         
+        # Check if the repo is safe (https://github.blog/2022-04-12-git-security-vulnerability-announced/)
+        if [ -d "$GIT_DIR" ]; then
+            GIT_DIR_OWNER="$(ls -ld "$GIT_DIR" | awk 'NR==1 {print $3}')"
+            if [ "$ID" != "$GIT_DIR_OWNER" ]; then
+                printf "${PROJ_DIR}: ${C_UNSAFE}Unsafe ownership, owned by someone else. Skipping.${C_RESET}\n"
+                continue
+            fi
+        fi
+
         # Check git config for this project to see if we should ignore this repo.
         IGNORE=$(git config -f "$GIT_CONF" --bool mgitstatus.ignore)
         if [ "$IGNORE" = "true" ]; then
