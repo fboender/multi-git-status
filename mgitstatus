@@ -2,7 +2,7 @@
 
 # MIT license
 
-VERSION="2.1"
+VERSION="2.2"
 DEBUG=0
 
 usage () {
