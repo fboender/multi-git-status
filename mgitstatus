@@ -156,18 +156,35 @@ ID="$(id -n -u)"
 # infinitely deep
 FIND_OPTS=""
 if [ "$DEPTH" -ne 0 ]; then
+    # 1 lvl deeper since we're searching for the .git directory inside the project
+    ((DEPTH=$DEPTH+1))
     FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
 fi
 
-# Go through positional arguments (DIRs) or '.' if no argumnets are given
+find_git_work_tree()(
+    cd "$1"
+    likely_gitdir="$PWD"
+    worktree="$(git rev-parse --show-toplevel 2>/dev/null)"
+    if [ -z "$worktree" ]; then
+        # GIT_DIR doesn't know; guess:
+        cd ..
+        echo "$PWD"
+    else
+        # git told us, so we'll trust it
+        echo "$worktree"
+        return 0
+    fi
+)
+
+# Go through positional arguments (DIRs) or '.' if no arguments are given
 for DIR in "${@:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
-    find -L "$DIR" $FIND_OPTS -type d | while read -r PROJ_DIR
+    find -L "$DIR" $FIND_OPTS -type d -name "*.git" -prune | while read -r GIT_DIR
     do
-        GIT_DIR="$PROJ_DIR/.git"
-        GIT_CONF="$PROJ_DIR/.git/config"
-        
+        PROJ_DIR="$(find_git_work_tree "$GIT_DIR")"
+        GIT_CONF="$GIT_DIR/config"
+
         # Check if the repo is safe (https://github.blog/2022-04-12-git-security-vulnerability-announced/)
         if [ -d "$GIT_DIR" ]; then
             GIT_DIR_OWNER="$(ls -ld "$GIT_DIR" | awk 'NR==1 {print $3}')"
@@ -201,11 +218,11 @@ for DIR in "${@:-"."}"; do
 
         # Do a 'git fetch' if requested
         if [ "$DO_FETCH" -eq 1 ]; then
-            git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" fetch -q >/dev/null
+            git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" fetch -q >/dev/null
         fi
 
         # Refresh the index, or we might get wrong results.
-        git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
+        git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
 
         # Find all remote branches that have been checked out and figure out if
         # they need a push or pull. We do this with various tests and put the name
@@ -269,12 +286,10 @@ for DIR in "${@:-"."}"; do
         NEEDS_UPSTREAM_BRANCHES=$(printf "$NEEDS_UPSTREAM_BRANCHES" | sort | uniq | tr '\n' ',' | sed "s/^,\(.*\),$/\1/")
 
         # Find out if there are unstaged, uncommitted or untracked changes
-        UNSTAGED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
-        UNCOMMITTED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
-        UNTRACKED=$(git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
-        cd "$(dirname "$GIT_DIR")" || exit
-        STASHES=$(git stash list | wc -l)
-        cd "$OLDPWD" || exit
+        UNSTAGED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" diff-index --quiet HEAD -- 2>/dev/null; echo $?)
+        UNCOMMITTED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" diff-files --quiet --ignore-submodules --; echo $?)
+        UNTRACKED=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" ls-files --exclude-standard --others)
+        STASHES=$(git --work-tree "$PROJ_DIR" --git-dir "$GIT_DIR" stash list | wc -l)
 
         # Build up the status string if not flattening. Otherwise, print
         # results immediately.
