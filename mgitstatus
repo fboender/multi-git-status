@@ -3,7 +3,7 @@
 # MIT license
 
 VERSION="2.2"
-DEBUG=0
+DEBUG=${MG_DEBUG:-0}
 
 usage () {
     cat << EOF >&2
@@ -275,6 +275,11 @@ for DIR in "${@:-"."}"; do
         cd "$(dirname "$GIT_DIR")" || exit
         STASHES=$(git stash list | wc -l)
         cd "$OLDPWD" || exit
+
+        [ $DEBUG -eq 1 ] && echo "UNSTAGED: $UNSTAGED"
+        [ $DEBUG -eq 1 ] && echo "UNCOMMITTED: $UNCOMMITTED"
+        [ $DEBUG -eq 1 ] && echo "UNTRACKED: $UNTRACKED"
+        [ $DEBUG -eq 1 ] && echo "STASHES: $STASHES"
 
         # Build up the status string if not flattening. Otherwise, print
         # results immediately.
