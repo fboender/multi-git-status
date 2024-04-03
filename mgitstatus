@@ -136,7 +136,7 @@ if [ -t 1 ] || [ "$FORCE_COLOR" -eq 1 ]; then
     C_BLUE="\033[1;34m"
     C_PURPLE="\033[1;35m"
     C_CYAN="\033[1;36m"
-    C_RESET="$(tput sgr0)"
+    C_RESET="\033[0;10m"
 fi
 
 C_OK="$C_GREEN"
