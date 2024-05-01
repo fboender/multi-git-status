@@ -2,7 +2,7 @@
 
 # MIT license
 
-VERSION="2.2"
+VERSION="2.3"
 DEBUG=${MG_DEBUG:-0}
 
 usage () {
