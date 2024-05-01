@@ -33,7 +33,7 @@ for that repo to `true`. (See "usage" below for an example).
 
 # Usage
 
-    Usage: mgitstatus [--version] [-w] [-e] [-f] [--throttle SEC] [-c] [-d/--depth=2] [--flatten] [--no-X] [DIR [DIR]...]
+    Usage: mgitstatus [--version] [-w] [-e] [-f] [--throttle SEC] [-c] [-d/--depth=2] [--no-depth] [--flatten] [--no-X] [DIR [DIR]...]
 
     mgitstatus shows uncommitted, untracked and unpushed changes in multiple Git
     repositories. By default, mgitstatus scans two directories deep. This can be
@@ -47,6 +47,7 @@ for that repo to `true`. (See "usage" below for an example).
       --throttle SEC   Wait SEC seconds between each 'git fetch' (-f option)
       -c               Force color output (preserve colors when using pipes)
       -d, --depth=2    Scan this many directories deep
+      --no-depth       Do not recurse into directories (incompatible with -d)
       --flatten        Show only one status per line
 
     You can limit output with the following options:

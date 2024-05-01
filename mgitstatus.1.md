@@ -64,6 +64,9 @@ mgitstatus makes no guarantees that all states are taken into account.
 **-d, \--depth=2**
 :   Scan this many directories deep. Default is 2. If **0**, the scan is infinitely deep
 
+**\--no-depth**
+:   Do not recurse into directories (incompatible with -d)
+
 **\--flatten**
 :   Flatten output by only showing one status per line. If a repo has multiple statuses, multiple lines are shown for that repo. This aids in grepability.
 

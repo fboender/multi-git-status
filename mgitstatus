@@ -22,6 +22,7 @@ deep.
   --throttle SEC   Wait SEC seconds between each 'git fetch' (-f option)
   -c               Force color output (preserve colors when using pipes)
   -d, --depth=2    Scan this many directories deep
+  --no-depth       Do not recurse into directories (incompatible with -d)
   --flatten        Show only one status per line
 
 You can limit output with the following options:
@@ -49,6 +50,7 @@ NO_UPSTREAM=0
 NO_UNCOMMITTED=0
 NO_UNTRACKED=0
 NO_STASHES=0
+NO_DEPTH=0
 THROTTLE=0
 DEPTH=2
 
@@ -100,6 +102,10 @@ while [ -n "$1" ]; do
     if [ "$1" = "--no-ok" ]; then
         # Same as -e, but -e violates the principle of least astonishment.
         EXCLUDE_OK=1
+    fi
+    if [ "$1" = "--no-depth" ]; then
+        # Same as -e, but -e violates the principle of least astonishment.
+        NO_DEPTH=1
     fi
     if [ "$1" = "--throttle" ]; then
         THROTTLE="$2"
@@ -158,6 +164,13 @@ FIND_OPTS=""
 if [ "$DEPTH" -ne 0 ]; then
     FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
 fi
+if [ "$NO_DEPTH" -eq 1 ]; then
+    # Do not recurse at all. Really, this should have been the '-d 0' option,
+    # but that's already used for infinite recursion, and we don't want to
+    # break backwards compatibility.
+    FIND_OPTS="$FIND_OPTS -maxdepth 0"
+fi
+
 
 # Go through positional arguments (DIRs) or '.' if no argumnets are given
 for DIR in "${@:-"."}"; do
