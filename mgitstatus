@@ -19,6 +19,7 @@ deep.
   -d, --depth=2    Scan this many directories deep
   -e               Exclude repos that are 'ok'
   -f               Do a 'git fetch' on each repo (slow for many repos)
+  -h, --help       Show this help message
   --flatten        Show only one status per line
   --no-depth       Do not recurse into directories (incompatible with -d)
   --throttle SEC   Wait SEC seconds between each 'git fetch' (-f option)
