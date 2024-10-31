@@ -15,6 +15,7 @@ repositories. By default, mgitstatus scans two directories deep. This can be
 changed with the -d (--depth) option.  If DEPTH is 0, the scan is infinitely
 deep.
 
+  -b               Show currently checked out branch
   -c               Force color output (preserve colors when using pipes)
   -d, --depth=2    Scan this many directories deep
   -e               Exclude repos that are 'ok'
@@ -54,11 +55,15 @@ NO_STASHES=0
 NO_DEPTH=0
 THROTTLE=0
 DEPTH=2
+SHOW_CUR_BRANCH=0
 
 while [ -n "$1" ]; do
     # Stop reading when we've run out of options.
     [ "$(printf "%s" "$1" | cut -c 1)" != "-" ] && break
 
+    if [ "$1" = "-b" ]; then
+        SHOW_CUR_BRANCH=1
+    fi
     if [ "$1" = "-c" ]; then
         FORCE_COLOR=1
     fi
@@ -221,6 +226,13 @@ for DIR in "${@:-"."}"; do
         # Refresh the index, or we might get wrong results.
         git --work-tree "$(dirname "$GIT_DIR")" --git-dir "$GIT_DIR" update-index -q --refresh >/dev/null 2>&1
 
+        # Get current branch, if "-b" is specified
+        if [ "$SHOW_CUR_BRANCH" -eq 1 ]; then
+            CUR_BRANCH=" ($(git --git-dir "$GIT_DIR" rev-parse --abbrev-ref HEAD))"
+        else
+            CUR_BRANCH=""
+        fi
+
         # Find all remote branches that have been checked out and figure out if
         # they need a push or pull. We do this with various tests and put the name
         # of the branches in NEEDS_XXXX, seperated by newlines. After we're done,
@@ -302,44 +314,44 @@ for DIR in "${@:-"."}"; do
         if [ -n "$NEEDS_PUSH_BRANCHES" ] && [ "$NO_PUSH" -eq 0 ]; then
             THIS_STATUS="${C_NEEDS_PUSH}Needs push ($NEEDS_PUSH_BRANCHES)${C_RESET}"
             STATUS_NEEDS="${STATUS_NEEDS}${THIS_STATUS} "
-            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}: $THIS_STATUS\n"
+            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}$CUR_BRANCH: $THIS_STATUS\n"
         fi
         if [ -n "$NEEDS_PULL_BRANCHES" ] && [ "$NO_PULL" -eq 0 ]; then
             THIS_STATUS="${C_NEEDS_PULL}Needs pull ($NEEDS_PULL_BRANCHES)${C_RESET}"
             STATUS_NEEDS="${STATUS_NEEDS}${THIS_STATUS} "
-            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}: $THIS_STATUS\n"
+            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}$CUR_BRANCH: $THIS_STATUS\n"
         fi
         if [ -n "$NEEDS_UPSTREAM_BRANCHES" ] && [ "$NO_UPSTREAM" -eq 0 ]; then
             THIS_STATUS="${C_NEEDS_UPSTREAM}Needs upstream ($NEEDS_UPSTREAM_BRANCHES)${C_RESET}"
             STATUS_NEEDS="${STATUS_NEEDS}${THIS_STATUS} "
-            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}: $THIS_STATUS\n"
+            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}$CUR_BRANCH: $THIS_STATUS\n"
         fi
         if [ "$UNSTAGED" -ne 0 ] || [ "$UNCOMMITTED" -ne 0 ] && [ "$NO_UNCOMMITTED" -eq 0 ]; then
             THIS_STATUS="${C_NEEDS_COMMIT}Uncommitted changes${C_RESET}"
             STATUS_NEEDS="${STATUS_NEEDS}${THIS_STATUS} "
-            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}: $THIS_STATUS\n"
+            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}$CUR_BRANCH: $THIS_STATUS\n"
         fi
         if [ "$UNTRACKED" != "" ] && [ "$NO_UNTRACKED" -eq 0 ]; then
             THIS_STATUS="${C_UNTRACKED}Untracked files${C_RESET}"
             STATUS_NEEDS="${STATUS_NEEDS}${THIS_STATUS} "
-            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}: $THIS_STATUS\n"
+            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}$CUR_BRANCH: $THIS_STATUS\n"
         fi
         if [ "$STASHES" -ne 0 ] && [ "$NO_STASHES" -eq 0 ]; then
             THIS_STATUS="${C_STASHES}$STASHES stashes${C_RESET}"
             STATUS_NEEDS="${STATUS_NEEDS}${THIS_STATUS} "
-            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}: $THIS_STATUS\n"
+            [ "$FLATTEN" -eq 1 ] && printf "${PROJ_DIR}$CUR_BRANCH: $THIS_STATUS\n"
         fi
         if [ "$STATUS_NEEDS" = "" ]; then
             IS_OK=1
             THIS_STATUS="${C_OK}ok${C_RESET}"
             STATUS_NEEDS="${STATUS_NEEDS}${THIS_STATUS} "
-            [ "$FLATTEN" -eq 1 ] && [ "$EXCLUDE_OK" -ne 1 ] && printf "${PROJ_DIR}: $THIS_STATUS\n"
+            [ "$FLATTEN" -eq 1 ] && [ "$EXCLUDE_OK" -ne 1 ] && printf "${PROJ_DIR}$CUR_BRANCH: $THIS_STATUS\n"
         fi
 
         if [ "$FLATTEN" -ne 1 ]; then
             # Print the output, unless repo is 'ok' and -e was specified
             if [ "$IS_OK" -ne 1 ] || [ "$EXCLUDE_OK" -ne 1 ]; then
-                printf "${PROJ_DIR}: $STATUS_NEEDS\n"
+                printf "${PROJ_DIR}$CUR_BRANCH: $STATUS_NEEDS\n"
             fi
         fi
 
